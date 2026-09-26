@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0c1a">
-<meta name="description" content="无尽点击挑战小游戏，登录后可上传成绩和升级">
+<meta name="description" content="无尽点击挑战小游戏，登录后自动累计点数和成绩">
 <title>⚡ 疯狂点击 · 无尽模式</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <style>
@@ -19,7 +19,6 @@
     --accent2:#8b5bff;
     --gold:#ffcc66;
     --good:#33d17a;
-    --danger:#ff7a7a;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
@@ -34,15 +33,36 @@
     -webkit-user-select:none;user-select:none;
     padding:20px 16px 44px;
     display:flex;justify-content:center;
+    overflow-x:hidden;
   }
   input{-webkit-user-select:text;user-select:text}
-  .wrap{width:100%;max-width:1040px}
+  .wrap{width:100%;max-width:1180px;position:relative;z-index:1}
 
-  header{text-align:center;margin-bottom:14px}
-  h1{font-size:clamp(22px,5vw,30px);margin:0 0 8px;letter-spacing:.5px}
+  /* ===== 背景粒子 ===== */
+  .bg-particles{
+    position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  }
+  .bg-particles i{
+    position:absolute;display:block;border-radius:50%;
+    background:radial-gradient(circle,rgba(91,140,255,.55),rgba(91,140,255,0) 70%);
+    animation:floatUp linear infinite;
+    opacity:.6;
+  }
+  @keyframes floatUp{
+    0%{transform:translateY(105vh) scale(.6);opacity:0}
+    12%{opacity:.55}
+    88%{opacity:.55}
+    100%{transform:translateY(-10vh) scale(1.1);opacity:0}
+  }
+
+  header{text-align:center;margin-bottom:16px}
+  h1{font-size:clamp(22px,5vw,30px);margin:0 0 8px;letter-spacing:.5px;
+    background:linear-gradient(180deg,#fff 30%,#8b9eff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
   .sub{margin:0;color:var(--muted);font-size:14px}
   .sub b{color:#9db4ff}
 
+  /* ===== 用户栏 ===== */
   .user-bar{
     display:flex;align-items:center;gap:10px;
     background:rgba(255,255,255,.04);
@@ -64,13 +84,23 @@
     padding:5px 12px;border-radius:99px;
     font-weight:700;font-variant-numeric:tabular-nums;
     font-size:13px;
+    transition:transform .18s ease, box-shadow .25s ease;
+  }
+  .user-bar .points.pulse{
+    transform:scale(1.14);
+    box-shadow:0 0 0 6px rgba(255,204,102,.12), 0 0 22px rgba(255,204,102,.5);
   }
   .btn.small{padding:8px 14px;font-size:13px;border-radius:10px}
 
-  .grid{display:grid;gap:16px;grid-template-columns:1fr}
+  /* ===== 主布局 ===== */
+  .layout{display:grid;gap:16px;grid-template-columns:1fr}
   @media(min-width:900px){
-    .grid{grid-template-columns:1.12fr .88fr;align-items:start}
-    .left-col{display:flex;flex-direction:column;gap:16px}
+    .layout{grid-template-columns:minmax(0,1fr) 300px;align-items:start}
+  }
+  .main-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .side-col{display:flex;flex-direction:column;gap:16px}
+  @media(min-width:900px){
+    .side-col{position:sticky;top:16px}
   }
 
   .panel{
@@ -80,15 +110,34 @@
     box-shadow:0 18px 40px -22px rgba(0,0,0,.9);
   }
 
-  .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-  .hud-item{background:rgba(255,255,255,.04);border-radius:12px;padding:9px 6px;text-align:center}
-  .hud-item .label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;letter-spacing:.5px}
-  .hud-item .val{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+  /* ===== HUD ===== */
+  .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .hud-item{
+    background:rgba(255,255,255,.04);
+    border-radius:12px;padding:11px 6px;text-align:center;
+    transition:background .25s;
+  }
+  .hud-item .label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:.5px}
+  .hud-item .val{
+    font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;
+    display:inline-block;
+    transition:color .2s;
+  }
+  .hud-item .val.bump{
+    animation:bumpAnim .28s cubic-bezier(.3,1.6,.6,1);
+  }
+  @keyframes bumpAnim{
+    0%{transform:scale(1)}
+    40%{transform:scale(1.22);color:var(--gold)}
+    100%{transform:scale(1)}
+  }
+  .hud-item.playing .val{color:var(--good)}
 
-  /* ===== 大按钮：GPU 加速 ===== */
+  /* ===== 大按钮 ===== */
   .click-btn{
+    position:relative;overflow:hidden;
     display:block;width:100%;
-    height:clamp(180px,32vh,270px);
+    height:clamp(200px,36vh,300px);
     border:0;border-radius:22px;
     background:linear-gradient(160deg,var(--accent),var(--accent2) 70%);
     color:#fff;font-family:inherit;
@@ -101,16 +150,23 @@
     transform:translateZ(0) scale(1);
     backface-visibility:hidden;
     -webkit-backface-visibility:hidden;
-    transition:
-      transform .07s cubic-bezier(.2,.8,.3,1),
-      background .2s ease,
-      box-shadow .2s ease;
+    transition:transform .07s cubic-bezier(.2,.8,.3,1), box-shadow .3s ease, filter .2s ease;
     box-shadow:0 16px 34px -14px rgba(91,124,255,.9),inset 0 -4px 0 rgba(0,0,0,.22);
   }
-  .click-btn.is-playing{
-    background:linear-gradient(160deg,#ff5b7f,#ff8a3d 70%);
-    box-shadow:0 16px 34px -14px rgba(255,107,107,.9),inset 0 -4px 0 rgba(0,0,0,.22);
-    letter-spacing:6px;
+  /* idle 呼吸光晕 */
+  .click-btn::before{
+    content:'';
+    position:absolute;inset:-2px;
+    border-radius:24px;
+    background:radial-gradient(circle at 50% 50%, rgba(139,91,255,.35), transparent 60%);
+    opacity:.6;
+    animation:breathe 3s ease-in-out infinite;
+    pointer-events:none;
+    z-index:-1;
+  }
+  @keyframes breathe{
+    0%,100%{opacity:.35;transform:scale(1)}
+    50%{opacity:.75;transform:scale(1.03)}
   }
   .click-btn:not(:disabled):active{
     transform:translateZ(0) scale(.955);
@@ -118,93 +174,137 @@
   }
   .click-btn:disabled{filter:grayscale(.55) brightness(.75);cursor:not-allowed;box-shadow:none}
 
-  .auto-info{
-    margin-top:10px;
-    text-align:center;
-    font-size:13px;font-weight:600;
+  /* 水波纹 */
+  .ripple{
+    position:absolute;
+    width:20px;height:20px;
+    margin-left:-10px;margin-top:-10px;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0) 70%);
+    transform:scale(0);
+    pointer-events:none;
+    animation:rippleAnim .7s ease-out forwards;
+  }
+  @keyframes rippleAnim{
+    to{transform:scale(22);opacity:0}
+  }
+
+  /* ===== 状态信息条 ===== */
+  .status-bar{
+    margin-top:12px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    font-size:13px;
+  }
+  .status-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--line);
+    padding:6px 12px;border-radius:99px;
+    color:var(--muted);
+    font-weight:600;
+    transition:all .25s;
+  }
+  .status-chip.on{
+    background:rgba(51,209,122,.12);
+    border-color:rgba(51,209,122,.35);
     color:#7be2a8;
-    background:rgba(51,209,122,.09);
-    border:1px solid rgba(51,209,122,.28);
-    border-radius:11px;
-    padding:8px 12px;
-    animation:fadeUp .25s ease;
   }
-  .auto-info.hidden{display:none}
+  .status-chip .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:currentColor;
+    animation:blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:.4;transform:scale(.7)}
+  }
 
-  .stop-row{margin-top:10px}
-  .stop-row.hidden{display:none}
-
-  .result{margin-top:14px;padding:16px;border-radius:16px;
-    background:rgba(255,255,255,.04);border:1px solid var(--line);animation:fadeUp .25s ease}
-  .result.hidden{display:none}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-  .result-score{font-size:44px;font-weight:800;text-align:center;line-height:1;
-    font-variant-numeric:tabular-nums;
-    background:linear-gradient(180deg,#fff,#9db4ff);
-    -webkit-background-clip:text;background-clip:text;color:transparent}
-  .result-score small{font-size:16px;font-weight:600;margin-left:4px;color:var(--muted);-webkit-text-fill-color:var(--muted)}
-  .result-msg{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 6px}
-  .result-reward{
-    text-align:center;
-    font-size:14px;font-weight:700;
+  /* ===== 飘字 ===== */
+  .float-point{
+    position:fixed;
+    z-index:9999;
     color:var(--gold);
-    margin:0 0 14px;
+    font-weight:800;
+    font-size:22px;
+    pointer-events:none;
+    text-shadow:0 2px 14px rgba(255,204,102,.9), 0 0 30px rgba(255,204,102,.4);
+    animation:floatPoint 1.1s cubic-bezier(.15,.8,.3,1) forwards;
   }
-  .result-reward.hidden{display:none}
-
-  .btn{
-    border:0;border-radius:12px;padding:11px 16px;
-    font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
-    transition:transform .06s,filter .15s,background .15s;
+  @keyframes floatPoint{
+    0%{transform:translate(-50%,-50%) scale(.4);opacity:0}
+    22%{transform:translate(-50%,-100%) scale(1.3);opacity:1}
+    100%{transform:translate(-50%,-280%) scale(.9);opacity:0}
   }
-  .btn:active{transform:scale(.98)}
-  .btn.primary{background:linear-gradient(160deg,var(--accent),var(--accent2));color:#fff}
-  .btn.primary:hover{filter:brightness(1.08)}
-  .btn.ghost{background:rgba(255,255,255,.07);color:var(--text)}
-  .btn.ghost:hover{background:rgba(255,255,255,.11)}
-  .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700}
-  .btn.danger{background:rgba(255,90,90,.15);color:#ff9a9a;border:1px solid rgba(255,90,90,.35)}
-  .btn.danger:hover{background:rgba(255,90,90,.25)}
-  .btn.block{width:100%}
-  .btn.tiny{padding:8px 12px;font-size:13px;border-radius:10px}
-  .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
-  .stack{display:flex;flex-direction:column;gap:8px;margin-top:2px}
 
-  .panel h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  /* ===== 排行榜 ===== */
+  .lb-panel{padding:14px}
+  .lb-panel h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
   .badge{margin-left:auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
     background:rgba(255,255,255,.08);color:#a8b0dd}
   .badge.cloud{background:rgba(51,209,122,.16);color:#5fe0a0}
   .badge.warn{background:rgba(255,150,60,.16);color:#ffb066}
+  .badge.gold{background:rgba(255,204,102,.16);color:var(--gold)}
 
-  /* ===== 排行榜折叠 ===== */
-  .lb-wrap{display:flex;flex-direction:column;gap:6px}
-  .lb-wrap.collapsed .lb-row.extra{display:none}
-  .lb-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;
-    background:rgba(255,255,255,.035);font-size:14px;transition:background .2s}
-  .lb-row.is-me{background:rgba(91,140,255,.14);box-shadow:inset 0 0 0 1px rgba(91,140,255,.4)}
-  .lb-rank{width:26px;flex:none;text-align:center;font-weight:700;color:var(--muted)}
+  #leaderboard{display:flex;flex-direction:column;gap:5px}
+  #leaderboard::-webkit-scrollbar{width:5px}
+  #leaderboard::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
+
+  .lb-row{
+    display:flex;align-items:center;gap:8px;
+    padding:8px 9px;border-radius:10px;
+    background:rgba(255,255,255,.035);
+    font-size:13px;
+    transition:background .3s, transform .3s, box-shadow .3s;
+    animation:lbRowIn .35s ease backwards;
+  }
+  @keyframes lbRowIn{
+    from{opacity:0;transform:translateX(-8px)}
+    to{opacity:1;transform:none}
+  }
+  .lb-row.extra{display:none}
+  .lb-expanded .lb-row.extra{display:flex}
+  .lb-row.is-me{
+    background:linear-gradient(135deg,rgba(91,140,255,.18),rgba(91,140,255,.06));
+    box-shadow:inset 0 0 0 1px rgba(91,140,255,.45);
+    animation:meRowPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes meRowPulse{
+    0%,100%{box-shadow:inset 0 0 0 1px rgba(91,140,255,.45)}
+    50%{box-shadow:inset 0 0 0 1px rgba(91,140,255,.75), 0 0 20px rgba(91,140,255,.25)}
+  }
+  .lb-row.just-me{
+    animation:meRowIn .8s cubic-bezier(.15,.9,.3,1);
+  }
+  @keyframes meRowIn{
+    0%{transform:scale(.6);opacity:0}
+    50%{transform:scale(1.08);background:rgba(255,204,102,.15)}
+    100%{transform:scale(1)}
+  }
+  .lb-rank{width:22px;flex:none;text-align:center;font-weight:700;color:var(--muted);font-size:12px}
+  .lb-rank.medal{font-size:16px}
   .lb-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .lb-name em{font-style:normal;font-size:10px;font-weight:700;background:var(--accent);color:#fff;
-    padding:1px 5px;border-radius:99px;margin-left:6px;vertical-align:middle}
-  .lb-meta{flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .lb-score{flex:none;min-width:40px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
-  .empty{color:#7b81ad;font-size:14px;text-align:center;padding:28px 8px}
+    padding:1px 5px;border-radius:99px;margin-left:5px;vertical-align:middle}
+  .lb-score{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:#9db4ff}
 
   .lb-toggle{
     margin-top:10px;
+    width:100%;
     background:rgba(255,255,255,.05);
     border:1px dashed rgba(255,255,255,.15);
     color:#9db4ff;
-    font-size:13px;font-weight:600;
-    padding:8px 12px;border-radius:11px;
-    cursor:pointer;width:100%;
+    font-size:12px;font-weight:600;
+    padding:7px 10px;border-radius:10px;
+    cursor:pointer;
     font-family:inherit;
-    transition:background .15s;
+    transition:background .2s,color .2s;
   }
-  .lb-toggle:hover{background:rgba(255,255,255,.09)}
+  .lb-toggle:hover{background:rgba(255,255,255,.09);color:#c3ceff}
   .lb-toggle.hidden{display:none}
 
+  .empty{color:#7b81ad;font-size:13px;text-align:center;padding:22px 8px}
+
+  /* ===== 升级面板 ===== */
   .upgrade-panel .points-hint{
     text-align:center;
     font-size:12px;color:var(--muted);
@@ -213,79 +313,129 @@
   .upgrade-panel .points-hint b{color:var(--gold);font-weight:700}
 
   .upgrade-item{
+    position:relative;overflow:hidden;
     background:rgba(255,255,255,.035);
     border:1px solid rgba(255,255,255,.06);
     border-radius:14px;
-    padding:12px;
-    transition:border-color .2s,background .2s;
+    padding:14px;
+    transition:border-color .25s,background .25s,transform .25s;
   }
   .upgrade-item.is-max{
-    background:linear-gradient(135deg,rgba(255,204,102,.09),rgba(255,204,102,.02));
-    border-color:rgba(255,204,102,.3);
+    background:linear-gradient(135deg,rgba(255,204,102,.1),rgba(255,204,102,.02));
+    border-color:rgba(255,204,102,.32);
   }
   .upgrade-item.can-buy{
-    border-color:rgba(91,140,255,.35);
-    background:linear-gradient(135deg,rgba(91,140,255,.1),rgba(91,140,255,.02));
+    border-color:rgba(91,140,255,.38);
+    background:linear-gradient(135deg,rgba(91,140,255,.11),rgba(91,140,255,.02));
+  }
+  /* 购买成功闪光 */
+  .upgrade-item.flash::after{
+    content:'';
+    position:absolute;inset:0;
+    background:radial-gradient(circle,rgba(255,204,102,.6),transparent 70%);
+    animation:flash .8s ease-out forwards;
+    pointer-events:none;
+  }
+  @keyframes flash{
+    from{opacity:1;transform:scale(.4)}
+    to{opacity:0;transform:scale(1.6)}
   }
 
-  .upgrade-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+  .upgrade-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
   .upgrade-icon{
-    font-size:20px;line-height:1;flex:none;
-    width:36px;height:36px;
+    font-size:22px;line-height:1;flex:none;
+    width:42px;height:42px;
     display:flex;align-items:center;justify-content:center;
-    background:rgba(0,0,0,.3);border-radius:10px;
+    background:rgba(0,0,0,.32);border-radius:12px;
+    transition:transform .3s cubic-bezier(.3,1.6,.6,1);
+  }
+  .upgrade-item.flash .upgrade-icon{
+    transform:scale(1.25) rotate(-8deg);
   }
   .upgrade-info{flex:1;min-width:0}
-  .upgrade-info h4{margin:0 0 3px;font-size:14px;font-weight:700}
-  .upgrade-info p{margin:0;font-size:11.5px;color:var(--muted);line-height:1.4}
+  .upgrade-info h4{margin:0 0 3px;font-size:15px;font-weight:700}
+  .upgrade-info p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
   .upgrade-effect{
-    display:block;font-size:11.5px;color:#9db4ff;margin-top:4px;font-weight:600;
+    display:block;font-size:12px;color:#9db4ff;margin-top:5px;font-weight:600;
   }
 
-  .upgrade-lv{
-    display:flex;gap:3px;flex:none;
-    margin-top:4px;
-  }
+  .upgrade-lv{display:flex;gap:4px;flex:none;margin-top:6px}
   .upgrade-lv i{
-    display:block;width:6px;height:6px;border-radius:50%;
+    display:block;width:8px;height:8px;border-radius:50%;
     background:rgba(255,255,255,.14);
+    transition:background .3s,box-shadow .3s,transform .3s;
   }
-  .upgrade-lv i.on{background:var(--gold);box-shadow:0 0 6px rgba(255,204,102,.55)}
+  .upgrade-lv i.on{
+    background:var(--gold);
+    box-shadow:0 0 8px rgba(255,204,102,.6);
+    animation:dotPop .4s cubic-bezier(.3,1.8,.6,1);
+  }
+  @keyframes dotPop{
+    0%{transform:scale(.3)}
+    60%{transform:scale(1.5)}
+    100%{transform:scale(1)}
+  }
 
   .upgrade-foot{display:flex;align-items:center;gap:8px}
   .upgrade-price{
     display:inline-flex;align-items:center;gap:4px;
-    font-size:13px;font-weight:700;color:var(--gold);
+    font-size:14px;font-weight:700;color:var(--gold);
     font-variant-numeric:tabular-nums;
   }
   .upgrade-price.poor{color:#ff7a7a}
-  .upgrade-foot .btn{margin-left:auto;padding:8px 14px;font-size:13px}
+  .upgrade-foot .btn{margin-left:auto;padding:9px 18px;font-size:14px}
+
+  /* ===== 按钮 ===== */
+  .btn{
+    border:0;border-radius:12px;padding:11px 16px;
+    font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
+    transition:transform .06s,filter .15s,background .15s,box-shadow .2s;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:linear-gradient(160deg,var(--accent),var(--accent2));color:#fff}
+  .btn.primary:hover{filter:brightness(1.08);box-shadow:0 8px 24px -8px rgba(91,140,255,.7)}
+  .btn.ghost{background:rgba(255,255,255,.07);color:var(--text)}
+  .btn.ghost:hover{background:rgba(255,255,255,.11)}
+  .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700;position:relative;overflow:hidden}
+  .btn.gold::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.5) 50%,transparent 70%);
+    transform:translateX(-100%);
+    animation:shine 2.2s ease-in-out infinite;
+  }
+  @keyframes shine{
+    0%{transform:translateX(-100%)}
+    60%,100%{transform:translateX(100%)}
+  }
+  .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
 
   .footer{text-align:center;color:#5f648c;font-size:12px;margin-top:22px}
 
-  .modal{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+  /* ===== 弹窗 ===== */
+  .modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
   .modal.hidden{display:none}
-  .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,15,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,15,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
   .modal-panel{
     position:relative;z-index:1;width:100%;max-width:380px;
     background:linear-gradient(180deg,#1c1f3d,#16182f);
     border:1px solid var(--line);border-radius:20px;padding:22px;
     box-shadow:0 30px 60px -20px rgba(0,0,0,.9);
-    animation:fadeUp .2s ease;
+    animation:modalIn .25s cubic-bezier(.15,.9,.3,1);
+  }
+  @keyframes modalIn{
+    from{opacity:0;transform:translateY(20px) scale(.95)}
+    to{opacity:1;transform:none}
   }
   .modal-close{position:absolute;top:8px;right:8px;background:transparent;border:0;color:var(--muted);
     font-size:24px;width:34px;height:34px;cursor:pointer;border-radius:9px;line-height:1;font-family:inherit}
   .modal-close:hover{background:rgba(255,255,255,.06);color:#fff}
   .modal-close.hidden{display:none}
   .modal-title{font-size:17px;font-weight:700;margin:0 0 6px;text-align:center}
-  .modal-subtitle{
-    text-align:center;font-size:12.5px;color:var(--muted);
-    margin:0 0 14px;line-height:1.5;
-  }
+  .modal-subtitle{text-align:center;font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.5}
 
   .tabs{display:flex;gap:5px;margin-bottom:16px;background:rgba(0,0,0,.28);padding:4px;border-radius:12px}
   .tab{flex:1;padding:9px;border:0;border-radius:9px;background:transparent;color:var(--muted);
-    font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s}
+    font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s}
   .tab.active{background:linear-gradient(160deg,var(--accent),var(--accent2));color:#fff}
 
   #authForm label{display:block;margin-bottom:12px}
@@ -310,58 +460,67 @@
 </style>
 </head>
 <body>
+
+<div class="bg-particles" id="bgParticles"></div>
+
 <div class="wrap">
   <header>
     <h1>⚡ 疯狂点击</h1>
-    <p class="sub">无尽模式 · 想点多久点多久 · 每 <b>10</b> 次点击 = <b>1</b> 💎</p>
+    <p class="sub">无尽模式 · 每 <b>10</b> 次点击 = <b>1</b> 💎 · 数据每 5 秒自动保存</p>
   </header>
 
   <div class="user-bar">
     <span id="userText">加载中…</span>
-    <span class="points" id="pointsBox" title="点击点数">💎 <span id="pointsVal">0</span></span>
+    <span class="points" id="pointsBox" title="当前点数">💎 <span id="pointsVal">0</span></span>
     <button id="userAction" class="btn ghost small" type="button">退出</button>
   </div>
 
-  <div class="grid">
-    <div class="left-col">
+  <div class="layout">
+    <div class="main-col">
       <section class="panel">
         <div class="hud">
-          <div class="hud-item"><span class="label">用时</span><span class="val" id="timer">00:00</span></div>
-          <div class="hud-item"><span class="label">点击次数</span><span class="val" id="count">0</span></div>
-          <div class="hud-item"><span class="label">每秒点击</span><span class="val" id="cps">0.0</span></div>
-        </div>
-
-        <button id="clickBtn" class="click-btn" type="button">开始挑战</button>
-
-        <div id="autoInfo" class="auto-info hidden"></div>
-
-        <div class="stop-row hidden" id="stopRow">
-          <button id="stopBtn" class="btn danger block" type="button">结束挑战</button>
-        </div>
-
-        <div id="result" class="result hidden">
-          <div class="result-score"><span id="resultScore">0</span><small>次</small></div>
-          <p class="result-msg" id="resultMsg"></p>
-          <p class="result-reward hidden" id="resultReward"></p>
-          <div class="stack">
-            <button id="saveBtn" class="btn primary block" type="button">上传成绩</button>
-            <button id="againBtn" class="btn ghost block" type="button">再来一次</button>
+          <div class="hud-item" id="hudTime">
+            <span class="label">游玩时间</span>
+            <span class="val" id="timer">00:00</span>
           </div>
+          <div class="hud-item" id="hudClicks">
+            <span class="label">累计点击</span>
+            <span class="val" id="count">0</span>
+          </div>
+          <div class="hud-item" id="hudCps">
+            <span class="label">本次每秒</span>
+            <span class="val" id="cps">0.0</span>
+          </div>
+        </div>
+
+        <button id="clickBtn" class="click-btn" type="button">点我！</button>
+
+        <div class="status-bar">
+          <span class="status-chip on" id="autoChip">
+            <span class="dot"></span>
+            <span id="autoChipText">等待登录…</span>
+          </span>
+          <span class="status-chip on" id="syncChip">
+            <span class="dot"></span>
+            <span id="syncChipText">已同步</span>
+          </span>
         </div>
       </section>
 
       <section class="panel upgrade-panel">
-        <h2>⚡ 升级 <span class="badge" id="upgradeBadge">0 级</span></h2>
-        <p class="points-hint">当前点数 <b id="pointsHint">0</b> · 每 10 次点击 = 1 💎</p>
+        <h2>⚡ 升级 <span class="badge gold" id="upgradeBadge">0 / 5</span></h2>
+        <p class="points-hint">当前点数 <b id="pointsHint">0</b> · 每 10 次点击自动 +1 💎</p>
         <div id="upgradeList"></div>
       </section>
     </div>
 
-    <section class="panel">
-      <h2>🏆 排行榜 <span class="badge" id="lbBadge">加载中…</span></h2>
-      <div id="leaderboard" class="lb-wrap collapsed"></div>
-      <button id="lbToggle" class="lb-toggle hidden" type="button">展开全部 ▼</button>
-    </section>
+    <aside class="side-col">
+      <section class="panel lb-panel">
+        <h2>🏆 排行榜 <span class="badge" id="lbBadge">加载中…</span></h2>
+        <div id="leaderboard"><div class="empty">加载中…</div></div>
+        <button id="lbToggle" class="lb-toggle hidden" type="button">展开全部 ▼</button>
+      </section>
+    </aside>
   </div>
 
   <p class="footer">纯前端小游戏 · 托管于 GitHub Pages</p>
@@ -406,20 +565,21 @@
 (function () {
   'use strict';
 
+  /* ============================================================
+   *  配置
+   * ============================================================ */
   const CONFIG = {
-    SHOW: 20,
-    LB_PREVIEW: 3,                         // 折叠时显示前 N 名
-    LB_REFRESH_MS: 10 * 60 * 1000,         // 排行榜 10 分钟刷新一次
-    POINT_PER_CLICKS: 10,                  // 每 10 次点击 = 1 点数
+    POINT_PER_CLICKS: 10,           // 每 10 次点击 = 1 点
+    SYNC_INTERVAL: 5000,            // 每 5 秒同步一次
+    LB_REFRESH_MS: 10 * 60 * 1000,  // 排行榜 10 分钟刷新
+    LB_PREVIEW: 3,
+    RIPPLE_THROTTLE: 70,            // 水波纹节流(毫秒)
 
     SUPABASE_URL: 'https://ideuctxwohmwdbdtjyuh.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkZXVjdHh3b2htd2RiZHRqeXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MjE4MDUsImV4cCI6MjEwNTk5NzgwNX0.YPy9y6njWnU5J3ptf1rSKImAVfnAnUR1TbljOd2D-EE',
-    TABLE: 'scores',
-    PROFILES: 'profiles',
     EMAIL_DOMAIN: '@clicks.game'
   };
 
-  // 自动点击等级 → 间隔（毫秒），索引即等级
   const AUTO_INTERVALS = [0, 2000, 1200, 800, 600, 400];
 
   const UPGRADES = [
@@ -427,14 +587,13 @@
       key: 'autoClick',
       icon: '🤖',
       name: '自动点击',
-      desc: '自动帮你点击按钮，升级后价格翻倍',
+      desc: '自动帮你点击按钮，价格每级翻倍',
       maxLevel: 5,
       baseCost: 20,
       growth: 2,
-      effectText: lv => {
-        if (lv === 0) return '尚未解锁';
-        return '每 ' + (AUTO_INTERVALS[lv] / 1000).toFixed(1) + ' 秒自动点击一次';
-      }
+      effectText: lv => lv === 0
+        ? '尚未解锁 · 只能靠手动'
+        : '每 ' + (AUTO_INTERVALS[lv] / 1000).toFixed(1) + ' 秒自动点一次'
     }
   ];
 
@@ -451,42 +610,52 @@
     console.error('Supabase 初始化失败', e);
   }
 
+  /* ============================================================
+   *  DOM
+   * ============================================================ */
   const $ = id => document.getElementById(id);
   const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps');
+  const hudClicks = $('hudClicks'), hudCps = $('hudCps');
   const clickBtn = $('clickBtn');
-  const autoInfo = $('autoInfo'), stopRow = $('stopRow'), stopBtn = $('stopBtn');
-  const resultEl = $('result'), resultScoreEl = $('resultScore'), resultMsgEl = $('resultMsg'),
-        resultRewardEl = $('resultReward');
-  const saveBtn = $('saveBtn'), againBtn = $('againBtn');
+  const autoChipText = $('autoChipText'), syncChipText = $('syncChipText');
+  const pointsBox = $('pointsBox'), pointsVal = $('pointsVal'), pointsHint = $('pointsHint');
+  const upgradeList = $('upgradeList'), upgradeBadge = $('upgradeBadge');
   const lbEl = $('leaderboard'), lbBadge = $('lbBadge'), lbToggle = $('lbToggle');
   const userText = $('userText'), userAction = $('userAction');
-  const pointsVal = $('pointsVal'), pointsHint = $('pointsHint');
-  const upgradeList = $('upgradeList'), upgradeBadge = $('upgradeBadge');
   const authModal = $('authModal'), authForm = $('authForm');
   const authUsername = $('authUsername'), authPassword = $('authPassword');
   const authSubmit = $('authSubmit'), authError = $('authError'), authInfo = $('authInfo');
   const modalTitle = $('modalTitle'), modalSubtitle = $('modalSubtitle');
   const modalCloseBtn = authModal.querySelector('.modal-close');
   const tabBtns = authModal.querySelectorAll('.tab[data-tab]');
+  const bgParticles = $('bgParticles');
 
-  /* ================= 状态 ================= */
-  let phase = 'idle';          // idle | playing | finished
-  let clicks = 0;
-  let startAt = 0;
-  let uiTimer = null;
-  let autoClickTimer = null;
-  let lastScore = 0;
-  let lastEarnedPoints = 0;
+  /* ============================================================
+   *  状态
+   * ============================================================ */
   let currentUser = null;
-  let currentProfile = null;
+  let currentProfile = null;   // { id, points, total_clicks, upgrades }
+
+  let sessionStart = Date.now();
+  let sessionClicks = 0;       // 本次会话点击数
+  let pendingClicks = 0;       // 待同步的点击数
+
+  let uiTimer = null;          // HUD 刷新
+  let syncTimer = null;        // 定期同步
+  let lbTimer = null;          // 排行榜刷新
+  let autoClickTimer = null;
+
   let authMode = 'login';
   let submitting = false;
   let authForced = true;
   let lbExpanded = false;
-  let lbRefreshTimer = null;
   let lbData = [];
+  let lastRippleAt = 0;
+  let syncing = false;
 
-  /* ================= 工具 ================= */
+  /* ============================================================
+   *  工具
+   * ============================================================ */
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => (
       { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
@@ -525,22 +694,87 @@
     return { autoClick: 0 };
   }
 
-  function totalUpgradeLevel() {
-    if (!currentProfile || !currentProfile.upgrades) return 0;
-    return currentProfile.upgrades.autoClick || 0;
-  }
-
   function currentAutoLevel() {
     if (!currentProfile || !currentProfile.upgrades) return 0;
     return currentProfile.upgrades.autoClick || 0;
   }
 
-  /* ================= Profile ================= */
+  /* ============================================================
+   *  背景粒子
+   * ============================================================ */
+  function buildParticles() {
+    const count = window.innerWidth < 600 ? 10 : 18;
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      const size = 2 + Math.random() * 4;
+      const left = Math.random() * 100;
+      const dur = 14 + Math.random() * 12;
+      const delay = -Math.random() * dur;
+      html += '<i style="'
+        + 'width:' + size + 'px;height:' + size + 'px;'
+        + 'left:' + left + '%;'
+        + 'animation-duration:' + dur + 's;'
+        + 'animation-delay:' + delay + 's;'
+        + '"></i>';
+    }
+    bgParticles.innerHTML = html;
+  }
+
+  /* ============================================================
+   *  动效
+   * ============================================================ */
+  function spawnRipple(e) {
+    const now = performance.now();
+    if (now - lastRippleAt < CONFIG.RIPPLE_THROTTLE) return;
+    lastRippleAt = now;
+
+    const rect = clickBtn.getBoundingClientRect();
+    let x, y;
+    if (e && e.clientX) {
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+    } else {
+      x = rect.width / 2;
+      y = rect.height / 2;
+    }
+
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    clickBtn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 750);
+  }
+
+  function floatPoint() {
+    const rect = clickBtn.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'float-point';
+    el.textContent = '+1 💎';
+    el.style.left = (rect.left + rect.width / 2) + 'px';
+    el.style.top = (rect.top + rect.height / 2) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+
+    // 顶部点数脉冲
+    pointsBox.classList.add('pulse');
+    setTimeout(() => pointsBox.classList.remove('pulse'), 250);
+  }
+
+  function bumpValue(el) {
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+
+  /* ============================================================
+   *  Profile
+   * ============================================================ */
   async function loadProfile() {
     if (!sb || !currentUser) return null;
     const { data, error } = await sb
-      .from(CONFIG.PROFILES)
-      .select('id,points,upgrades')
+      .from('profiles')
+      .select('id,points,total_clicks,upgrades')
       .eq('id', currentUser.id)
       .maybeSingle();
     if (error) { console.warn('加载 profile 失败', error); return null; }
@@ -551,28 +785,19 @@
     if (!sb || !currentUser) return null;
     let p = await loadProfile();
     if (p) {
-      // 兼容旧数据结构：upgrades 里可能有 time/target/multiplier，需要迁移
+      // 兼容旧结构升级字段
       const upg = p.upgrades || {};
-      const hasOld = upg.time !== undefined || upg.target !== undefined || upg.multiplier !== undefined;
-      const hasNew = upg.autoClick !== undefined;
-      if (hasOld && !hasNew) {
+      if (upg.autoClick === undefined) {
         const cleaned = { autoClick: 0 };
-        const { error } = await sb.from(CONFIG.PROFILES)
-          .update({ upgrades: cleaned })
-          .eq('id', currentUser.id);
-        if (!error) return { ...p, upgrades: cleaned };
-      } else if (!hasNew) {
-        const cleaned = { ...upg, autoClick: 0 };
-        const { error } = await sb.from(CONFIG.PROFILES)
-          .update({ upgrades: cleaned })
-          .eq('id', currentUser.id);
-        if (!error) return { ...p, upgrades: cleaned };
+        await sb.from('profiles').update({ upgrades: cleaned }).eq('id', currentUser.id);
+        p.upgrades = cleaned;
       }
+      if (p.total_clicks === undefined || p.total_clicks === null) p.total_clicks = 0;
+      if (p.points === undefined || p.points === null) p.points = 0;
       return p;
     }
-    const { error } = await sb
-      .from(CONFIG.PROFILES)
-      .insert({ id: currentUser.id, points: 0, upgrades: defaultUpgrades() });
+    const { error } = await sb.from('profiles')
+      .insert({ id: currentUser.id, points: 0, total_clicks: 0, upgrades: defaultUpgrades() });
     if (error) console.warn('创建 profile 失败', error);
     return await loadProfile();
   }
@@ -581,7 +806,6 @@
     currentProfile = p;
     renderUserBar();
     renderUpgradeList();
-    updateAutoInfo();
   }
 
   function renderUserBar() {
@@ -589,6 +813,7 @@
       userText.textContent = '云端不可用 · 请检查网络后刷新';
       userAction.disabled = true;
       pointsVal.textContent = '0';
+      pointsHint.textContent = '0';
       return;
     }
     if (currentUser) {
@@ -596,8 +821,9 @@
       userAction.disabled = false;
       userAction.textContent = '退出';
       userAction.dataset.action = 'logout';
-      pointsVal.textContent = (currentProfile && currentProfile.points) || 0;
-      pointsHint.textContent = (currentProfile && currentProfile.points) || 0;
+      const pts = (currentProfile && currentProfile.points) || 0;
+      pointsVal.textContent = pts;
+      pointsHint.textContent = pts;
     } else {
       userText.textContent = '未登录';
       userAction.disabled = true;
@@ -606,39 +832,159 @@
     }
   }
 
-  /* ================= 排行榜（每用户去重）================= */
-  async function fetchScores() {
-    if (!sb) throw new Error('云端不可用');
+  /* ============================================================
+   *  同步进度（RPC）
+   * ============================================================ */
+  function setSyncChip(text, ok) {
+    syncChipText.textContent = text;
+    const chip = document.getElementById('syncChip');
+    chip.classList.toggle('on', !!ok);
+  }
 
-    const fetchLimit = Math.max(CONFIG.SHOW * 10, 200);
+  async function syncProgress(force) {
+    if (syncing || !sb || !currentUser || !currentProfile) return;
+    if (pendingClicks <= 0 && !force) return;
 
-    const { data, error } = await sb
-      .from(CONFIG.TABLE)
-      .select('id,user_id,name,score,cps,created_at')
-      .order('score', { ascending: false })
-      .order('created_at', { ascending: true })
-      .limit(fetchLimit);
+    syncing = true;
+    const toSync = pendingClicks;
+    pendingClicks = 0;
 
-    if (error) throw error;
+    setSyncChip('同步中…', false);
 
-    // 每个 user_id 只保留最高分（已按分数降序，第一次出现就是最高分）
-    const seen = new Set();
-    const deduped = [];
-    for (const r of (data || [])) {
-      const key = r.user_id || ('anon_' + r.id);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      deduped.push(r);
-      if (deduped.length >= CONFIG.SHOW) break;
+    try {
+      const { data, error } = await sb.rpc('sync_progress', { p_clicks: toSync });
+      if (error) throw error;
+
+      const res = data || {};
+      if (!res.ok) throw new Error(res.error || 'unknown');
+
+      const prevPoints = currentProfile.points || 0;
+      currentProfile.total_clicks = res.total_clicks;
+      currentProfile.points = res.points;
+      currentProfile.upgrades = currentProfile.upgrades || defaultUpgrades();
+
+      // 用服务器数据刷新 UI
+      renderUserBar();
+      renderUpgradeList();
+
+      // 如果点数突然变多（跨设备），做一次脉冲
+      if (res.points > prevPoints) {
+        pointsBox.classList.add('pulse');
+        setTimeout(() => pointsBox.classList.remove('pulse'), 250);
+      }
+
+      setSyncChip('已同步', true);
+    } catch (err) {
+      console.warn('同步失败', err);
+      pendingClicks += toSync;   // 回滚
+      setSyncChip('同步失败，稍后重试', false);
+    } finally {
+      syncing = false;
+    }
+  }
+
+  /* ============================================================
+   *  核心点击逻辑
+   * ============================================================ */
+  function doClick(e, auto) {
+    if (!currentUser || !currentProfile) return;
+
+    const prev = currentProfile.total_clicks || 0;
+    const next = prev + 1;
+
+    currentProfile.total_clicks = next;
+    sessionClicks++;
+    pendingClicks++;
+
+    // 计数更新
+    countEl.textContent = next;
+    bumpValue(countEl);
+
+    // 跨过 10 的倍数时加点数
+    const crossed = Math.floor(next / CONFIG.POINT_PER_CLICKS) >
+                    Math.floor(prev / CONFIG.POINT_PER_CLICKS);
+
+    if (crossed) {
+      currentProfile.points = (currentProfile.points || 0) + 1;
+      pointsVal.textContent = currentProfile.points;
+      pointsHint.textContent = currentProfile.points;
+      floatPoint();
+      renderUpgradeList();      // 让"点数不足"变成可购买
     }
 
-    return deduped.map(r => ({
-      id: r.id,
+    // 水波纹（自动点击走中心位置）
+    if (auto) {
+      spawnRipple(null);
+    } else if (e) {
+      spawnRipple(e);
+    }
+
+    // 触觉
+    if (navigator.vibrate && !auto) {
+      try { navigator.vibrate(5); } catch (err) {}
+    }
+  }
+
+  /* ============================================================
+   *  自动点击
+   * ============================================================ */
+  function startAutoClick() {
+    stopAutoClick();
+    const lv = currentAutoLevel();
+    if (lv <= 0) { updateAutoChip(); return; }
+
+    autoClickTimer = setInterval(() => {
+      if (!currentUser || !currentProfile) return;
+      doClick(null, true);
+    }, AUTO_INTERVALS[lv]);
+
+    updateAutoChip();
+  }
+
+  function stopAutoClick() {
+    if (autoClickTimer) { clearInterval(autoClickTimer); autoClickTimer = null; }
+    updateAutoChip();
+  }
+
+  function updateAutoChip() {
+    const lv = currentAutoLevel();
+    const chip = document.getElementById('autoChip');
+    if (!currentUser) {
+      autoChipText.textContent = '等待登录…';
+      chip.classList.remove('on');
+      return;
+    }
+    if (lv > 0) {
+      autoChipText.textContent = '🤖 自动点击 · 每 ' + (AUTO_INTERVALS[lv] / 1000).toFixed(1) + ' 秒一次';
+      chip.classList.add('on');
+    } else {
+      autoChipText.textContent = '手动模式（可升级自动点击）';
+      chip.classList.remove('on');
+    }
+  }
+
+  /* ============================================================
+   *  HUD
+   * ============================================================ */
+  function updateHud() {
+    const elapsed = Date.now() - sessionStart;
+    timerEl.textContent = formatTime(elapsed);
+    if (elapsed > 1000) {
+      cpsEl.textContent = (sessionClicks / (elapsed / 1000)).toFixed(1);
+    }
+  }
+
+  /* ============================================================
+   *  排行榜（RPC）
+   * ============================================================ */
+  async function fetchLeaderboard() {
+    if (!sb) throw new Error('云端不可用');
+    const { data, error } = await sb.rpc('get_leaderboard');
+    if (error) throw error;
+    return (data || []).map(r => ({
       user_id: r.user_id,
       name: r.name,
-      score: Number(r.score) || 0,
-      cps: Number(r.cps) || 0,
-      time: Date.parse(r.created_at) || 0
+      score: Number(r.score) || 0
     }));
   }
 
@@ -648,6 +994,7 @@
 
     if (!total) {
       lbEl.innerHTML = '<div class="empty">还没有记录，快来抢占第一名！</div>';
+      lbEl.classList.remove('lb-expanded');
       lbToggle.classList.add('hidden');
       return;
     }
@@ -664,22 +1011,18 @@
       return '<div class="lb-row'
         + (isMe ? ' is-me' : '')
         + (isExtra ? ' extra' : '')
-        + '">'
-        + '<span class="lb-rank">' + mark + '</span>'
+        + '" style="animation-delay:' + (i * 30) + 'ms">'
+        + '<span class="lb-rank' + (rank <= 3 ? ' medal' : '') + '">' + mark + '</span>'
         + '<span class="lb-name">' + escapeHtml(it.name) + (isMe ? '<em>我</em>' : '') + '</span>'
-        + '<span class="lb-meta">' + it.cps.toFixed(1) + '/s</span>'
         + '<span class="lb-score">' + it.score + '</span>'
         + '</div>';
     }).join('');
 
-    // 折叠状态由 lbExpanded 控制
-    lbEl.classList.toggle('collapsed', !lbExpanded);
+    lbEl.classList.toggle('lb-expanded', lbExpanded);
 
     if (total > CONFIG.LB_PREVIEW) {
       lbToggle.classList.remove('hidden');
-      lbToggle.textContent = lbExpanded
-        ? '收起 ▲'
-        : '展开全部（' + total + ' 名）▼';
+      lbToggle.textContent = lbExpanded ? '收起 ▲' : '展开全部（' + total + ' 名）▼';
     } else {
       lbToggle.classList.add('hidden');
     }
@@ -693,7 +1036,7 @@
       return;
     }
     try {
-      const rows = await fetchScores();
+      const rows = await fetchLeaderboard();
       lbBadge.textContent = '云端';
       lbBadge.className = 'badge cloud';
       renderLeaderboard(rows);
@@ -707,27 +1050,19 @@
     }
   }
 
-  // 每 10 分钟自动刷新（页面可见时才刷）
-  function startLbAutoRefresh() {
-    if (lbRefreshTimer) clearInterval(lbRefreshTimer);
-    lbRefreshTimer = setInterval(() => {
-      if (document.hidden) return;
-      if (!currentUser) return;
-      refreshLeaderboard();
-    }, CONFIG.LB_REFRESH_MS);
-  }
-
   lbToggle.addEventListener('click', function () {
     lbExpanded = !lbExpanded;
     renderLeaderboard(lbData);
   });
 
-  /* ================= 升级面板 ================= */
+  /* ============================================================
+   *  升级面板
+   * ============================================================ */
   function renderUpgradeList() {
     const pts = (currentProfile && currentProfile.points) || 0;
     const lvObj = (currentProfile && currentProfile.upgrades) || defaultUpgrades();
 
-    upgradeBadge.textContent = totalUpgradeLevel() + ' 级';
+    upgradeBadge.textContent = (lvObj.autoClick || 0) + ' / ' + UPGRADES[0].maxLevel;
 
     upgradeList.innerHTML = UPGRADES.map(u => {
       const level = lvObj[u.key] || 0;
@@ -749,7 +1084,7 @@
         btnHtml = '<button class="btn ghost" disabled>点数不足</button>';
       }
 
-      return '<div class="upgrade-item' + (isMax ? ' is-max' : (canBuy ? ' can-buy' : '')) + '">'
+      return '<div class="upgrade-item' + (isMax ? ' is-max' : (canBuy ? ' can-buy' : '')) + '" data-key="' + u.key + '">'
         + '<div class="upgrade-head">'
         +   '<div class="upgrade-icon">' + u.icon + '</div>'
         +   '<div class="upgrade-info">'
@@ -774,12 +1109,13 @@
     const u = UPGRADES.find(x => x.key === key);
     if (!u) return;
 
-    const level = (currentProfile.upgrades && currentProfile.upgrades[key]) || 0;
+    const level = currentAutoLevel();
     if (level >= u.maxLevel) return;
     const cost = upgradeCost(u, level);
-    if (currentProfile.points < cost) return;
+    if ((currentProfile.points || 0) < cost) return;
 
-    const btn = upgradeList.querySelector('[data-buy="' + key + '"]');
+    const item = upgradeList.querySelector('.upgrade-item[data-key="' + key + '"]');
+    const btn = item && item.querySelector('[data-buy]');
     if (btn) { btn.disabled = true; btn.textContent = '购买中…'; }
 
     const { data, error } = await sb.rpc('purchase_upgrade', {
@@ -791,22 +1127,12 @@
     if (error) {
       console.warn('购买失败', error);
       renderUpgradeList();
-      alert('购买失败：' + (error.message || '请稍后重试'));
       return;
     }
 
     const res = data || {};
     if (!res.ok) {
       renderUpgradeList();
-      const msgs = {
-        insufficient: '点数不足',
-        max_level: '已经满级啦',
-        not_authenticated: '登录状态已失效',
-        profile_not_found: '数据异常，请重新登录',
-        invalid_key: '升级项不存在',
-        invalid_param: '参数错误'
-      };
-      alert(msgs[res.error] || ('购买失败：' + res.error));
       return;
     }
 
@@ -816,11 +1142,19 @@
     setProfile({
       id: currentProfile.id,
       points: res.points,
+      total_clicks: currentProfile.total_clicks,
       upgrades: newUpg
     });
 
-    // 游戏中购买 → 立刻生效
-    if (phase === 'playing') startAutoClick();
+    // 闪光动效
+    const newItem = upgradeList.querySelector('.upgrade-item[data-key="' + key + '"]');
+    if (newItem) {
+      newItem.classList.add('flash');
+      setTimeout(() => newItem.classList.remove('flash'), 850);
+    }
+
+    // 立即生效
+    startAutoClick();
   }
 
   upgradeList.addEventListener('click', function (e) {
@@ -829,167 +1163,9 @@
     purchaseUpgrade(btn.dataset.buy);
   });
 
-  /* ================= 游戏逻辑 ================= */
-  function updateHud() {
-    if (phase !== 'playing') return;
-    const elapsed = Date.now() - startAt;
-    timerEl.textContent = formatTime(elapsed);
-    cpsEl.textContent = (clicks / Math.max(elapsed / 1000, 0.5)).toFixed(1);
-  }
-
-  function resetHud() {
-    timerEl.textContent = '00:00';
-    countEl.textContent = '0';
-    cpsEl.textContent = '0.0';
-  }
-
-  function updateAutoInfo() {
-    const lv = currentAutoLevel();
-    if (phase === 'playing' && lv > 0) {
-      autoInfo.textContent = '🤖 自动点击中 · 每 ' + (AUTO_INTERVALS[lv] / 1000).toFixed(1) + ' 秒一次';
-      autoInfo.classList.remove('hidden');
-    } else {
-      autoInfo.classList.add('hidden');
-    }
-  }
-
-  function startAutoClick() {
-    stopAutoClick();
-    const lv = currentAutoLevel();
-    if (lv <= 0) { updateAutoInfo(); return; }
-    const interval = AUTO_INTERVALS[lv];
-    autoClickTimer = setInterval(() => {
-      if (phase !== 'playing') return;
-      clicks++;
-      countEl.textContent = clicks;
-    }, interval);
-    updateAutoInfo();
-  }
-
-  function stopAutoClick() {
-    if (autoClickTimer) { clearInterval(autoClickTimer); autoClickTimer = null; }
-  }
-
-  function startGame() {
-    if (!currentUser) { openAuthModal('login', true); return; }
-    if (!sb) return;
-    if (!currentProfile) { alert('正在加载你的数据，请稍候…'); return; }
-
-    clicks = 0;
-    startAt = Date.now();
-    lastEarnedPoints = 0;
-
-    resultEl.classList.add('hidden');
-    resetHud();
-
-    clickBtn.disabled = false;
-    clickBtn.textContent = '点！';
-    clickBtn.classList.add('is-playing');
-
-    stopRow.classList.remove('hidden');
-
-    phase = 'playing';
-    updateHud();
-    updateAutoInfo();
-
-    if (uiTimer) clearInterval(uiTimer);
-    uiTimer = setInterval(updateHud, 100);
-
-    startAutoClick();
-  }
-
-  function endGame() {
-    if (phase !== 'playing') return;
-    phase = 'finished';
-
-    stopAutoClick();
-    if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
-    updateAutoInfo();
-
-    clickBtn.disabled = false;
-    clickBtn.classList.remove('is-playing');
-    clickBtn.textContent = '再来一局';
-
-    stopRow.classList.add('hidden');
-
-    lastScore = clicks;
-    const elapsed = Date.now() - startAt;
-    const cps = clicks / Math.max(elapsed / 1000, 0.5);
-    lastEarnedPoints = Math.floor(lastScore / CONFIG.POINT_PER_CLICKS);
-
-    resultScoreEl.textContent = lastScore;
-    resultMsgEl.textContent = '用时 ' + formatTime(elapsed) + ' · 平均 ' + cps.toFixed(1) + ' 次/秒';
-
-    if (lastEarnedPoints > 0) {
-      resultRewardEl.textContent = '💎 上传可获得 ' + lastEarnedPoints + ' 点数';
-      resultRewardEl.classList.remove('hidden');
-      saveBtn.textContent = '上传成绩 · 获得 ' + lastEarnedPoints + ' 💎';
-    } else {
-      resultRewardEl.textContent = '💎 点击满 ' + CONFIG.POINT_PER_CLICKS + ' 次才能获得点数';
-      resultRewardEl.classList.remove('hidden');
-      saveBtn.textContent = '上传成绩（无点数）';
-    }
-
-    resultEl.classList.remove('hidden');
-    saveBtn.disabled = false;
-  }
-
-  // 手动点击
-  function registerClick() {
-    if (phase !== 'playing') return;
-    clicks++;
-    countEl.textContent = clicks;
-    if (navigator.vibrate) { try { navigator.vibrate(6); } catch (e) {} }
-  }
-
-  /* ================= 上传成绩 ================= */
-  async function handleSave() {
-    if (!currentUser) { openAuthModal('login', true); return; }
-    if (!sb) return;
-    if (phase !== 'finished') return;
-
-    saveBtn.disabled = true;
-    saveBtn.textContent = '上传中…';
-
-    const elapsed = Date.now() - startAt;
-    const cps = Number((lastScore / Math.max(elapsed / 1000, 0.5)).toFixed(2));
-
-    const { data, error } = await sb.rpc('submit_score', {
-      p_name: usernameOf(currentUser),
-      p_score: lastScore,
-      p_cps: cps,
-      p_points: lastEarnedPoints
-    });
-
-    if (error) {
-      console.warn('上传失败', error);
-      saveBtn.disabled = false;
-      saveBtn.textContent = '上传失败，点此重试';
-      return;
-    }
-
-    const res = data || {};
-    if (!res.ok) {
-      saveBtn.disabled = false;
-      saveBtn.textContent = '上传失败，点此重试';
-      return;
-    }
-
-    if (typeof res.points === 'number') {
-      setProfile({
-        id: currentProfile.id,
-        points: res.points,
-        upgrades: currentProfile.upgrades
-      });
-    }
-
-    saveBtn.textContent = '已上传 ✓ +' + lastEarnedPoints + ' 💎';
-
-    // 上传后立即刷新一次（10 分钟自动刷新照旧）
-    await refreshLeaderboard();
-  }
-
-  /* ================= 弹窗 ================= */
+  /* ============================================================
+   *  弹窗
+   * ============================================================ */
   function openAuthModal(mode, forced) {
     if (!sb) return;
     authForced = !!forced;
@@ -1095,29 +1271,39 @@
 
   async function handleLogout() {
     if (!sb) return;
+    await syncProgress(true);   // 先同步再退出
     await sb.auth.signOut();
   }
 
-  /* ================= 事件绑定 ================= */
+  /* ============================================================
+   *  事件绑定
+   * ============================================================ */
+  // 点击（手动）
   clickBtn.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-
     if (!currentUser) { openAuthModal('login', true); return; }
+    if (!currentProfile) return;
 
-    if (phase === 'playing') registerClick();
-    else startGame();
+    doClick(e, false);
   });
 
-  stopBtn.addEventListener('click', endGame);
-  againBtn.addEventListener('click', startGame);
-  saveBtn.addEventListener('click', handleSave);
+  // 键盘
+  document.addEventListener('keydown', function (e) {
+    if (e.code !== 'Space' && e.code !== 'Enter') return;
+    if (e.repeat) return;
+    if (!authModal.classList.contains('hidden')) return;
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+    if (!currentUser || !currentProfile) return;
+
+    e.preventDefault();
+    doClick(null, false);
+  });
 
   userAction.addEventListener('click', function () {
     if (userAction.dataset.action === 'logout') handleLogout();
   });
 
   authForm.addEventListener('submit', submitAuth);
-
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => setAuthMode(btn.dataset.tab));
   });
@@ -1129,61 +1315,84 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      if (!authModal.classList.contains('hidden')) {
-        if (authForced && !currentUser) return;
-        closeAuthModal();
-        return;
-      }
-    }
-
-    // 空格：游戏中 = 点击；非游戏中 = 开始
-    if (e.code === 'Space' || e.code === 'Enter') {
-      if (e.repeat) return;
-      if (!authModal.classList.contains('hidden')) return;
-      if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
-      if (!currentUser) return;
-
-      e.preventDefault();
-      if (phase === 'playing') registerClick();
-      else startGame();
+    if (e.key === 'Escape' && !authModal.classList.contains('hidden')) {
+      if (authForced && !currentUser) return;
+      closeAuthModal();
     }
   });
 
-  /* ================= 认证状态 ================= */
+  // 页面隐藏时同步
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      syncProgress(true);
+    } else {
+      refreshLeaderboard();
+    }
+  });
+
+  // 关闭前尽力同步
+  window.addEventListener('beforeunload', function () {
+    if (pendingClicks > 0) {
+      // 用 sendBeacon 大概率来不及（需要 auth header），只用同步 RPC 试试
+      try { syncProgress(true); } catch (e) {}
+    }
+  });
+
+  /* ============================================================
+   *  认证状态
+   * ============================================================ */
   async function onSignedIn(session) {
     currentUser = session.user;
     renderUserBar();
 
     let p = await ensureProfile();
     if (!p) {
-      p = { id: currentUser.id, points: 0, upgrades: defaultUpgrades() };
+      p = { id: currentUser.id, points: 0, total_clicks: 0, upgrades: defaultUpgrades() };
     }
     setProfile(p);
 
+    // 更新 HUD 显示为当前值
+    countEl.textContent = currentProfile.total_clicks || 0;
+
+    // 会话开始
+    sessionStart = Date.now();
+    sessionClicks = 0;
+
     closeAuthModal();
+
+    // 启动所有计时器
+    if (uiTimer) clearInterval(uiTimer);
+    uiTimer = setInterval(updateHud, 200);
+
+    if (syncTimer) clearInterval(syncTimer);
+    syncTimer = setInterval(() => syncProgress(false), CONFIG.SYNC_INTERVAL);
+
+    if (lbTimer) clearInterval(lbTimer);
+    lbTimer = setInterval(() => {
+      if (!document.hidden) refreshLeaderboard();
+    }, CONFIG.LB_REFRESH_MS);
+
+    startAutoClick();
+    updateAutoChip();
     refreshLeaderboard();
     renderUpgradeList();
-    updateAutoInfo();
   }
 
   function onSignedOut() {
-    // 停止所有计时器
-    stopAutoClick();
-    if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
-    if (lbRefreshTimer) { clearInterval(lbRefreshTimer); lbRefreshTimer = null; }
-
-    phase = 'idle';
     currentUser = null;
     currentProfile = null;
-    resetHud();
+    sessionClicks = 0;
+    pendingClicks = 0;
 
-    clickBtn.disabled = false;
-    clickBtn.classList.remove('is-playing');
-    clickBtn.textContent = '开始挑战';
-    stopRow.classList.add('hidden');
-    resultEl.classList.add('hidden');
-    autoInfo.classList.add('hidden');
+    if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
+    if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+    if (lbTimer) { clearInterval(lbTimer); lbTimer = null; }
+    stopAutoClick();
+
+    countEl.textContent = '0';
+    cpsEl.textContent = '0.0';
+    timerEl.textContent = '00:00';
+    setSyncChip('等待登录…', false);
 
     renderUserBar();
     renderUpgradeList();
@@ -1191,11 +1400,15 @@
     openAuthModal('login', true);
   }
 
-  /* ================= 初始化 ================= */
+  /* ============================================================
+   *  初始化
+   * ============================================================ */
   async function init() {
-    resetHud();
+    buildParticles();
     renderUserBar();
     renderUpgradeList();
+    updateAutoChip();
+    setSyncChip('等待登录…', false);
 
     if (!sb) {
       userText.textContent = '云端不可用 · 请检查网络后刷新';
@@ -1229,15 +1442,6 @@
       openAuthModal('login', true);
       refreshLeaderboard();
     }
-
-    // 页面切回前台时，如果 10 分钟已过，立即刷新一次
-    document.addEventListener('visibilitychange', function () {
-      if (!document.hidden && currentUser) {
-        refreshLeaderboard();
-      }
-    });
-
-    startLbAutoRefresh();
   }
 
   init();
