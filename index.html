@@ -18,7 +18,6 @@
     --accent:#4f6dff;
     --accent2:#8b5bff;
     --gold:#ffcc66;
-    --good:#33d17a;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
@@ -38,14 +37,11 @@
   input{-webkit-user-select:text;user-select:text}
   .wrap{width:100%;max-width:720px;position:relative;z-index:1}
 
-  .bg-particles{
-    position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
-  }
+  .bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
   .bg-particles i{
     position:absolute;display:block;border-radius:50%;
     background:radial-gradient(circle,rgba(91,140,255,.55),rgba(91,140,255,0) 70%);
-    animation:floatUp linear infinite;
-    opacity:.6;
+    animation:floatUp linear infinite;opacity:.6;
   }
   @keyframes floatUp{
     0%{transform:translateY(105vh) scale(.6);opacity:0}
@@ -61,25 +57,17 @@
 
   .user-bar{
     display:flex;align-items:center;gap:10px;
-    background:rgba(255,255,255,.04);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:10px 14px;
-    margin-bottom:16px;
-    font-size:14px;
-    min-height:50px;
-    flex-wrap:wrap;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);
+    border-radius:14px;padding:10px 14px;margin-bottom:16px;
+    font-size:14px;min-height:50px;flex-wrap:wrap;
   }
   .user-bar .uname{color:#9db4ff;font-weight:700}
   .user-bar .points{
-    margin-left:auto;
-    display:inline-flex;align-items:center;gap:5px;
+    margin-left:auto;display:inline-flex;align-items:center;gap:5px;
     background:linear-gradient(135deg,rgba(255,204,102,.18),rgba(255,204,102,.06));
-    border:1px solid rgba(255,204,102,.32);
-    color:var(--gold);
-    padding:5px 12px;border-radius:99px;
-    font-weight:700;font-variant-numeric:tabular-nums;
-    font-size:13px;
+    border:1px solid rgba(255,204,102,.32);color:var(--gold);
+    padding:5px 12px;border-radius:99px;font-weight:700;
+    font-variant-numeric:tabular-nums;font-size:13px;
     transition:transform .18s ease, box-shadow .25s ease;
   }
   .user-bar .points.pulse{
@@ -90,25 +78,15 @@
 
   .panel{
     background:linear-gradient(180deg,var(--panel-a),var(--panel-b));
-    border:1px solid var(--line);
-    border-radius:20px;padding:16px;
-    box-shadow:0 18px 40px -22px rgba(0,0,0,.9);
-    margin-bottom:16px;
+    border:1px solid var(--line);border-radius:20px;padding:16px;
+    box-shadow:0 18px 40px -22px rgba(0,0,0,.9);margin-bottom:16px;
   }
 
   .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-  .hud-item{
-    background:rgba(255,255,255,.04);
-    border-radius:12px;padding:11px 6px;text-align:center;
-  }
+  .hud-item{background:rgba(255,255,255,.04);border-radius:12px;padding:11px 6px;text-align:center}
   .hud-item .label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:.5px}
-  .hud-item .val{
-    font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;
-    display:inline-block;
-  }
-  .hud-item .val.bump{
-    animation:bumpAnim .28s cubic-bezier(.3,1.6,.6,1);
-  }
+  .hud-item .val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;display:inline-block}
+  .hud-item .val.bump{animation:bumpAnim .28s cubic-bezier(.3,1.6,.6,1)}
   @keyframes bumpAnim{
     0%{transform:scale(1)}
     40%{transform:scale(1.22);color:var(--gold)}
@@ -116,25 +94,17 @@
   }
 
   .click-btn{
-    display:block;width:100%;
-    height:clamp(220px,40vh,320px);
+    display:block;width:100%;height:clamp(220px,40vh,320px);
     border:0;border-radius:22px;
     background:linear-gradient(160deg,var(--accent),var(--accent2) 70%);
     color:#fff;font-family:inherit;
-    font-size:clamp(28px,7vw,40px);font-weight:800;letter-spacing:8px;
-    padding-left:8px;
-    cursor:pointer;
-    touch-action:manipulation;
+    font-size:clamp(28px,7vw,40px);font-weight:800;letter-spacing:8px;padding-left:8px;
+    cursor:pointer;touch-action:manipulation;
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;user-select:none;
-    will-change:transform;
-    transform:translateZ(0);
-    backface-visibility:hidden;
-    -webkit-backface-visibility:hidden;
-    transition:
-      transform .15s cubic-bezier(.2,.8,.3,1),
-      box-shadow .2s ease,
-      filter .15s ease;
+    will-change:transform;transform:translateZ(0);
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    transition:transform .15s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease, filter .15s ease;
     box-shadow:0 18px 36px -16px rgba(91,124,255,.85), inset 0 -4px 0 rgba(0,0,0,.22);
   }
   .click-btn:hover:not(:disabled){
@@ -143,49 +113,28 @@
   }
   .click-btn:active:not(:disabled){
     transform:translateZ(0) translateY(0) scale(.97);
-    transition-duration:.06s;
-    filter:brightness(.94);
+    transition-duration:.06s;filter:brightness(.94);
     box-shadow:0 8px 16px -8px rgba(91,124,255,.6), inset 0 -1px 0 rgba(0,0,0,.22);
   }
 
-  .status-bar{
-    margin-top:12px;
-    display:flex;align-items:center;
-    font-size:13px;
-  }
+  .status-bar{margin-top:12px;display:flex;align-items:center;font-size:13px}
   .status-chip{
     display:inline-flex;align-items:center;gap:6px;
-    background:rgba(255,255,255,.05);
-    border:1px solid var(--line);
-    padding:6px 12px;border-radius:99px;
-    color:var(--muted);
-    font-weight:600;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);
+    padding:6px 12px;border-radius:99px;color:var(--muted);font-weight:600;
     transition:all .25s;
   }
-  .status-chip.on{
-    background:rgba(51,209,122,.12);
-    border-color:rgba(51,209,122,.35);
-    color:#7be2a8;
-  }
-  .status-chip .dot{
-    width:7px;height:7px;border-radius:50%;
-    background:currentColor;
-  }
-  .status-chip.on .dot{
-    animation:blink 1.4s ease-in-out infinite;
-  }
+  .status-chip.on{background:rgba(51,209,122,.12);border-color:rgba(51,209,122,.35);color:#7be2a8}
+  .status-chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .status-chip.on .dot{animation:blink 1.4s ease-in-out infinite}
   @keyframes blink{
     0%,100%{opacity:1;transform:scale(1)}
     50%{opacity:.4;transform:scale(.7)}
   }
 
   .float-point{
-    position:fixed;
-    z-index:9999;
-    color:var(--gold);
-    font-weight:800;
-    font-size:22px;
-    pointer-events:none;
+    position:fixed;z-index:9999;color:var(--gold);
+    font-weight:800;font-size:22px;pointer-events:none;
     text-shadow:0 2px 14px rgba(255,204,102,.9), 0 0 30px rgba(255,204,102,.4);
     animation:floatPoint 1.1s cubic-bezier(.15,.8,.3,1) forwards;
   }
@@ -203,9 +152,7 @@
     position:relative;overflow:hidden;
     background:rgba(255,255,255,.035);
     border:1px solid rgba(255,255,255,.06);
-    border-radius:14px;
-    padding:14px;
-    margin-bottom:10px;
+    border-radius:14px;padding:14px;margin-bottom:10px;
     transition:border-color .25s,background .25s;
   }
   .upgrade-item:last-child{margin-bottom:0}
@@ -218,17 +165,14 @@
     background:linear-gradient(135deg,rgba(91,140,255,.11),rgba(91,140,255,.02));
   }
   .upgrade-item.flash::after{
-    content:'';
-    position:absolute;inset:0;
+    content:'';position:absolute;inset:0;
     background:radial-gradient(circle,rgba(255,204,102,.6),transparent 70%);
-    animation:flash .8s ease-out forwards;
-    pointer-events:none;
+    animation:flash .8s ease-out forwards;pointer-events:none;
   }
   @keyframes flash{
     from{opacity:1;transform:scale(.4)}
     to{opacity:0;transform:scale(1.6)}
   }
-
   .upgrade-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
   .upgrade-icon{
     font-size:22px;line-height:1;flex:none;
@@ -237,15 +181,11 @@
     background:rgba(0,0,0,.32);border-radius:12px;
     transition:transform .3s cubic-bezier(.3,1.6,.6,1);
   }
-  .upgrade-item.flash .upgrade-icon{
-    transform:scale(1.25) rotate(-8deg);
-  }
+  .upgrade-item.flash .upgrade-icon{transform:scale(1.25) rotate(-8deg)}
   .upgrade-info{flex:1;min-width:0}
   .upgrade-info h4{margin:0 0 3px;font-size:15px;font-weight:700}
   .upgrade-info p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
-  .upgrade-effect{
-    display:block;font-size:12px;color:#9db4ff;margin-top:5px;font-weight:600;
-  }
+  .upgrade-effect{display:block;font-size:12px;color:#9db4ff;margin-top:5px;font-weight:600}
 
   .upgrade-lv{display:flex;gap:4px;flex:none;margin-top:6px;align-items:center}
   .upgrade-lv i{
@@ -254,8 +194,7 @@
     transition:background .3s,box-shadow .3s;
   }
   .upgrade-lv i.on{
-    background:var(--gold);
-    box-shadow:0 0 8px rgba(255,204,102,.6);
+    background:var(--gold);box-shadow:0 0 8px rgba(255,204,102,.6);
     animation:dotPop .4s cubic-bezier(.3,1.8,.6,1);
   }
   @keyframes dotPop{
@@ -264,14 +203,10 @@
     100%{transform:scale(1)}
   }
   .upgrade-level-text{
-    font-size:11px;font-weight:700;
-    color:var(--gold);
-    padding:3px 9px;
-    background:rgba(255,204,102,.12);
-    border-radius:99px;
-    white-space:nowrap;
+    font-size:11px;font-weight:700;color:var(--gold);
+    padding:3px 9px;background:rgba(255,204,102,.12);
+    border-radius:99px;white-space:nowrap;
   }
-
   .upgrade-foot{display:flex;align-items:center;gap:8px}
   .upgrade-price{
     display:inline-flex;align-items:center;gap:4px;
@@ -295,20 +230,13 @@
   .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
 
   .lb-fab{
-    position:fixed;
-    right:20px;bottom:20px;
-    width:60px;height:60px;
-    border-radius:50%;
-    border:0;
+    position:fixed;right:20px;bottom:20px;
+    width:60px;height:60px;border-radius:50%;border:0;
     background:linear-gradient(160deg,var(--accent),var(--accent2));
-    color:#fff;
-    font-size:26px;line-height:1;
-    cursor:pointer;
-    z-index:200;
+    color:#fff;font-size:26px;line-height:1;cursor:pointer;z-index:200;
     display:flex;align-items:center;justify-content:center;
     -webkit-tap-highlight-color:transparent;
-    will-change:transform;
-    transform:translateZ(0);
+    will-change:transform;transform:translateZ(0);
     transition:transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease;
     box-shadow:0 12px 28px -8px rgba(91,140,255,.7), inset 0 -3px 0 rgba(0,0,0,.2);
   }
@@ -369,10 +297,8 @@
 
   .lb-list{
     display:flex;flex-direction:column;gap:6px;
-    max-height:60vh;overflow-y:auto;
-    padding-right:4px;
-    scrollbar-width:thin;
-    scrollbar-color:rgba(255,255,255,.15) transparent;
+    max-height:60vh;overflow-y:auto;padding-right:4px;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;
   }
   .lb-list::-webkit-scrollbar{width:5px}
   .lb-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
@@ -380,8 +306,7 @@
   .lb-row{
     display:flex;align-items:center;gap:8px;
     padding:9px 10px;border-radius:10px;
-    background:rgba(255,255,255,.035);
-    font-size:13.5px;
+    background:rgba(255,255,255,.035);font-size:13.5px;
     animation:lbRowIn .35s ease backwards;
   }
   @keyframes lbRowIn{
@@ -455,16 +380,16 @@
 
 <div id="lbModal" class="modal hidden">
   <div class="modal-backdrop" data-close-lb></div>
-  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+  <div class="modal-panel" role="dialog" aria-modal="true">
     <button class="modal-close" type="button" data-close-lb aria-label="关闭">×</button>
-    <h3 class="modal-title" id="lbTitle">🏆 排行榜</h3>
+    <h3 class="modal-title">🏆 排行榜</h3>
     <div id="leaderboard" class="lb-list"><div class="empty">加载中…</div></div>
   </div>
 </div>
 
 <div id="authModal" class="modal hidden">
   <div class="modal-backdrop" data-close></div>
-  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-panel" role="dialog" aria-modal="true">
     <button class="modal-close" type="button" data-close aria-label="关闭">×</button>
     <h3 class="modal-title" id="modalTitle">登录</h3>
     <p class="modal-subtitle" id="modalSubtitle">必须先登录才能开始</p>
@@ -501,6 +426,9 @@
 (function () {
   'use strict';
 
+  /* ============================================================
+   *  常量
+   * ============================================================ */
   const CONFIG = {
     POINT_PER_CLICKS: 10,
     SYNC_INTERVAL: 5000,
@@ -511,47 +439,21 @@
   };
 
   /* ============================================================
-   *  升级定义
+   *  内置升级配置（外部加载失败时的保底）
    * ============================================================ */
-
-  // 速度等级 → 间隔（毫秒），索引 = 等级
-  const AUTO_INTERVALS = [0, 2000, 1200, 800, 600, 400];
-
-  // 速度价格：5, 20, 80, 320, 1280
-  function speedCost(level) {
-    return 5 * Math.pow(4, level);
-  }
-
-  // 倍率价格：
-  //   基础 100
-  //   <5 级：每次 ×1.5
-  //   5-14 级：每次 ×2
-  //   15-49 级：每次 ×2.4
-  //   50-99 级：每次 ×1.2
-  //   100 级满级
-  function multiplierCost(level) {
-    if (level >= 100) return Infinity;
-    let cost = 100;
-    for (let i = 0; i < level; i++) {
-      if (i < 5) cost *= 1.5;
-      else if (i < 15) cost *= 2;
-      else if (i < 50) cost *= 2.4;
-      else cost *= 1.2;
-    }
-    return Math.floor(cost);
-  }
-
-  const UPGRADES = [
+  const BUILTIN_UPGRADES = [
     {
       key: 'autoClick',
       icon: '🤖',
       name: '自动点击[速度]',
       desc: '自动帮你点击按钮',
       maxLevel: 5,
-      cost: speedCost,
-      effectText: (lv) => lv === 0
-        ? '尚未解锁'
-        : '每 ' + (AUTO_INTERVALS[lv] / 1000).toFixed(1) + ' 秒自动点击一次'
+      cost: { type: 'exponential', base: 5, growth: 4 },
+      effect: {
+        type: 'autoClickInterval',
+        params: { intervals: [0, 2000, 1200, 800, 600, 400] },
+        texts: { empty: '尚未解锁', value: '每 {sec} 秒自动点击一次' }
+      }
     },
     {
       key: 'autoMultiplier',
@@ -559,12 +461,29 @@
       name: '自动点击[倍率]',
       desc: '每次自动点击附加额外点击',
       maxLevel: 100,
-      cost: multiplierCost,
-      effectText: (lv) => lv === 0
-        ? '尚未解锁'
-        : '每次自动点击 ×' + (1 + lv)
+      cost: {
+        type: 'segmented',
+        base: 100,
+        segments: [
+          { until: 5,   growth: 1.5 },
+          { until: 15,  growth: 2   },
+          { until: 50,  growth: 2.4 },
+          { until: 100, growth: 1.2 }
+        ]
+      },
+      effect: {
+        type: 'autoClickMultiplier',
+        params: {},
+        texts: { empty: '尚未解锁', value: '每次自动点击 ×{value}' }
+      }
     }
   ];
+
+  /* ============================================================
+   *  全局状态
+   * ============================================================ */
+  let upgradeDefs = BUILTIN_UPGRADES.slice();
+  let upgradeSource = '内置';
 
   let sb = null;
   try {
@@ -602,6 +521,7 @@
   let syncTimer = null;
   let lbTimer = null;
   let autoClickTimer = null;
+  let autoClickIntervalMs = null;
 
   let authMode = 'login';
   let submitting = false;
@@ -609,7 +529,9 @@
   let lbData = [];
   let syncing = false;
 
-  /* ================= 工具 ================= */
+  /* ============================================================
+   *  工具
+   * ============================================================ */
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => (
       { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
@@ -617,10 +539,10 @@
   }
 
   function formatTime(ms) {
-    const totalSec = Math.max(0, Math.floor(ms / 1000));
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
+    const t = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(t / 3600);
+    const m = Math.floor((t % 3600) / 60);
+    const s = t % 60;
     if (h > 0) return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
@@ -655,8 +577,57 @@
     return '';
   }
 
-  function defaultUpgrades() {
-    return { autoClick: 0, autoMultiplier: 0 };
+  /* ============================================================
+   *  升级配置加载
+   * ============================================================ */
+  function validateUpgradeDef(u) {
+    if (!u || typeof u !== 'object') return false;
+    if (!u.key || typeof u.key !== 'string') return false;
+    if (!u.name) return false;
+    if (typeof u.maxLevel !== 'number' || u.maxLevel < 1) return false;
+    if (!u.cost || typeof u.cost !== 'object') return false;
+    return true;
+  }
+
+  async function loadUpgradeConfig() {
+    // 支持 ?config=xxx.json 覆盖默认路径
+    const params = new URLSearchParams(location.search);
+    const customUrl = params.get('config');
+    const url = customUrl || 'upgrades.json';
+
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      const data = await res.json();
+
+      // 兼容纯数组 或 { upgrades: [...] }
+      let list = null;
+      if (Array.isArray(data)) list = data;
+      else if (data && Array.isArray(data.upgrades)) list = data.upgrades;
+
+      if (!list || !list.length) throw new Error('配置为空');
+
+      const valid = list.filter(validateUpgradeDef);
+      if (!valid.length) throw new Error('没有有效的升级项');
+
+      upgradeDefs = valid;
+      upgradeSource = customUrl ? '远程' : '外部';
+      console.log('[升级配置] 已从 ' + url + ' 加载 ' + valid.length + ' 项升级');
+      return true;
+    } catch (e) {
+      console.warn('[升级配置] 加载 ' + url + ' 失败（' + e.message + '），使用内置配置');
+      upgradeDefs = BUILTIN_UPGRADES.slice();
+      upgradeSource = '内置';
+      return false;
+    }
+  }
+
+  /* ============================================================
+   *  升级引擎：从配置计算价格 / 效果 / 文本
+   * ============================================================ */
+  function findDef(key) {
+    return upgradeDefs.find(u => u.key === key);
   }
 
   function getUpgradeLevel(key) {
@@ -664,24 +635,89 @@
     return Number(currentProfile.upgrades[key]) || 0;
   }
 
-  function currentAutoLevel() {
-    return getUpgradeLevel('autoClick');
+  // 计算某个升级在指定等级下的"购买下一级"价格
+  function calcCost(def, level) {
+    const c = def.cost || {};
+    if (c.type === 'exponential') {
+      const base = Number(c.base) || 1;
+      const growth = Number(c.growth) || 1;
+      return Math.floor(base * Math.pow(growth, level));
+    }
+    if (c.type === 'segmented') {
+      let cost = Number(c.base) || 1;
+      const segs = Array.isArray(c.segments) ? c.segments : [];
+      for (let i = 0; i < level; i++) {
+        let g = 1;
+        for (const s of segs) {
+          if (i < (Number(s.until) || Infinity)) { g = Number(s.growth) || 1; break; }
+        }
+        cost *= g;
+      }
+      return Math.floor(cost);
+    }
+    if (c.type === 'linear') {
+      const base = Number(c.base) || 0;
+      const growth = Number(c.growth) || 1;
+      return Math.floor(base + growth * level);
+    }
+    return Infinity;
   }
 
-  function currentMultiplierLevel() {
-    return getUpgradeLevel('autoMultiplier');
+  // 生成效果文本
+  function effectText(def, level) {
+    const e = def.effect || {};
+    const t = e.texts || {};
+
+    if (level <= 0) return t.empty || '尚未解锁';
+
+    let value = level;
+    let sec = '';
+
+    switch (e.type) {
+      case 'autoClickInterval': {
+        const arr = (e.params && e.params.intervals) || [];
+        value = arr[Math.min(level, arr.length - 1)] || 1000;
+        sec = (value / 1000).toFixed(1);
+        break;
+      }
+      case 'autoClickMultiplier': {
+        value = 1 + level;
+        break;
+      }
+      default:
+        break;
+    }
+
+    return String(t.value || '{value}')
+      .replace(/\{value\}/g, value)
+      .replace(/\{sec\}/g, sec);
   }
 
-  function currentPoints() {
-    if (!currentProfile) return 0;
-    return Number(currentProfile.points) || 0;
+  // 找某个 effect type 对应的升级项 + 当前等级
+  function findEffect(type) {
+    const def = upgradeDefs.find(u => u.effect && u.effect.type === type);
+    if (!def) return null;
+    return { def: def, level: getUpgradeLevel(def.key) };
   }
 
-  function totalUpgradeLevel() {
-    return currentAutoLevel() + currentMultiplierLevel();
+  // 自动点击间隔（毫秒），null = 没有自动点击
+  function engineGetAutoClickInterval() {
+    const found = findEffect('autoClickInterval');
+    if (!found || found.level <= 0) return null;
+    const arr = (found.def.effect.params && found.def.effect.params.intervals) || [];
+    return arr[Math.min(found.level, arr.length - 1)] || null;
   }
 
-  /* ================= 背景粒子 ================= */
+  // 自动点击每次增加的点击数
+  function engineGetAutoClickMultiplier() {
+    const found = findEffect('autoClickMultiplier');
+    if (!found || found.level <= 0) return 1;
+    return 1 + found.level;
+  }
+
+  /* ============================================================
+   *  背景粒子
+   * ============================================================ */
   function buildParticles() {
     const count = window.innerWidth < 600 ? 8 : 14;
     let html = '';
@@ -694,13 +730,14 @@
         + 'width:' + size + 'px;height:' + size + 'px;'
         + 'left:' + left + '%;'
         + 'animation-duration:' + dur + 's;'
-        + 'animation-delay:' + delay + 's;'
-        + '"></i>';
+        + 'animation-delay:' + delay + 's;"></i>';
     }
     bgParticles.innerHTML = html;
   }
 
-  /* ================= 动效 ================= */
+  /* ============================================================
+   *  动效
+   * ============================================================ */
   function floatPoint(n) {
     const rect = clickBtn.getBoundingClientRect();
     const el = document.createElement('div');
@@ -721,7 +758,27 @@
     el.classList.add('bump');
   }
 
-  /* ================= Profile ================= */
+  /* ============================================================
+   *  Profile
+   * ============================================================ */
+  function normalizeProfile(data) {
+    if (!data) return null;
+    data.points = Number(data.points) || 0;
+    data.total_clicks = Number(data.total_clicks) || 0;
+    if (!data.upgrades || typeof data.upgrades !== 'object') {
+      data.upgrades = {};
+    } else {
+      // 保证所有数字字段为 number
+      const cleaned = {};
+      for (const k in data.upgrades) {
+        const v = Number(data.upgrades[k]);
+        if (isFinite(v)) cleaned[k] = v;
+      }
+      data.upgrades = cleaned;
+    }
+    return data;
+  }
+
   async function loadProfile() {
     if (!sb || !currentUser) return null;
     const { data, error } = await sb
@@ -730,41 +787,17 @@
       .eq('id', currentUser.id)
       .maybeSingle();
     if (error) { console.warn('加载 profile 失败', error); return null; }
-    if (!data) return null;
-
-    data.points = Number(data.points) || 0;
-    data.total_clicks = Number(data.total_clicks) || 0;
-    if (!data.upgrades || typeof data.upgrades !== 'object') {
-      data.upgrades = defaultUpgrades();
-    } else {
-      if (data.upgrades.autoClick === undefined) data.upgrades.autoClick = 0;
-      if (data.upgrades.autoMultiplier === undefined) data.upgrades.autoMultiplier = 0;
-    }
-    return data;
+    return normalizeProfile(data);
   }
 
   async function ensureProfile() {
     if (!sb || !currentUser) return null;
-    let p = await loadProfile();
 
-    if (p) {
-      // 补全可能缺失的 upgrades 字段
-      const upg = p.upgrades || {};
-      if (upg.autoClick === undefined || upg.autoMultiplier === undefined) {
-        const cleaned = Object.assign({}, upg, {
-          autoClick: Number(upg.autoClick) || 0,
-          autoMultiplier: Number(upg.autoMultiplier) || 0
-        });
-        const { error } = await sb.from('profiles')
-          .update({ upgrades: cleaned })
-          .eq('id', currentUser.id);
-        if (!error) p.upgrades = cleaned;
-      }
-      return p;
-    }
+    let p = await loadProfile();
+    if (p) return p;
 
     const { error } = await sb.from('profiles')
-      .insert({ id: currentUser.id, points: 0, total_clicks: 0, upgrades: defaultUpgrades() });
+      .insert({ id: currentUser.id, points: 0, total_clicks: 0, upgrades: {} });
     if (error) console.warn('创建 profile 失败', error);
 
     return await loadProfile();
@@ -788,7 +821,7 @@
       userAction.disabled = false;
       userAction.textContent = '退出';
       userAction.dataset.action = 'logout';
-      pointsVal.textContent = currentPoints();
+      pointsVal.textContent = currentProfile ? currentProfile.points : 0;
     } else {
       userText.textContent = '未登录';
       userAction.disabled = true;
@@ -796,7 +829,9 @@
     }
   }
 
-  /* ================= 同步 ================= */
+  /* ============================================================
+   *  同步
+   * ============================================================ */
   function setSyncChip(text, ok) {
     syncChipText.textContent = text;
     syncChip.classList.toggle('on', !!ok);
@@ -836,19 +871,14 @@
     }
   }
 
-  /* ================= 核心点击 ================= */
+  /* ============================================================
+   *  核心点击
+   * ============================================================ */
   function doClick(auto) {
     if (!currentUser || !currentProfile) return;
 
     const prev = currentProfile.total_clicks || 0;
-
-    // 手动：+1 点击
-    // 自动：+ (1 + 倍率等级) 点击
-    let addClicks = 1;
-    if (auto) {
-      addClicks = 1 + currentMultiplierLevel();
-    }
-
+    const addClicks = auto ? engineGetAutoClickMultiplier() : 1;
     const next = prev + addClicks;
 
     currentProfile.total_clicks = next;
@@ -858,13 +888,12 @@
     countEl.textContent = next;
     bumpValue(countEl);
 
-    // 计算跨过了多少个 10 的阈值
     const oldTier = Math.floor(prev / CONFIG.POINT_PER_CLICKS);
     const newTier = Math.floor(next / CONFIG.POINT_PER_CLICKS);
     const gained = newTier - oldTier;
 
     if (gained > 0) {
-      currentProfile.points = currentPoints() + gained;
+      currentProfile.points += gained;
       pointsVal.textContent = currentProfile.points;
       floatPoint(gained);
       renderUpgradeList();
@@ -875,23 +904,36 @@
     }
   }
 
-  /* ================= 自动点击 ================= */
+  /* ============================================================
+   *  自动点击
+   * ============================================================ */
   function startAutoClick() {
     stopAutoClick();
-    const lv = currentAutoLevel();
-    if (lv <= 0) return;
+    const interval = engineGetAutoClickInterval();
+    if (!interval || interval <= 0) return;
 
+    autoClickIntervalMs = interval;
     autoClickTimer = setInterval(() => {
       if (!currentUser || !currentProfile) return;
       doClick(true);
-    }, AUTO_INTERVALS[lv]);
+    }, interval);
   }
 
   function stopAutoClick() {
     if (autoClickTimer) { clearInterval(autoClickTimer); autoClickTimer = null; }
+    autoClickIntervalMs = null;
   }
 
-  /* ================= HUD ================= */
+  function restartAutoClickIfNeeded() {
+    const interval = engineGetAutoClickInterval();
+    if (interval !== autoClickIntervalMs) {
+      startAutoClick();
+    }
+  }
+
+  /* ============================================================
+   *  HUD
+   * ============================================================ */
   function updateHud() {
     const elapsed = Date.now() - sessionStart;
     timerEl.textContent = formatTime(elapsed);
@@ -900,7 +942,9 @@
     }
   }
 
-  /* ================= 排行榜 ================= */
+  /* ============================================================
+   *  排行榜
+   * ============================================================ */
   async function fetchLeaderboard() {
     if (!sb) throw new Error('云端不可用');
     const { data, error } = await sb.rpc('get_leaderboard');
@@ -914,7 +958,6 @@
 
   function renderLeaderboard(list) {
     lbData = list || [];
-
     if (!lbData.length) {
       lbEl.innerHTML = '<div class="empty">还没有记录</div>';
       return;
@@ -937,10 +980,7 @@
   }
 
   async function refreshLeaderboard() {
-    if (!sb) {
-      renderLeaderboard([]);
-      return;
-    }
+    if (!sb) { renderLeaderboard([]); return; }
     try {
       const rows = await fetchLeaderboard();
       renderLeaderboard(rows);
@@ -965,48 +1005,60 @@
     if (e.target.closest('[data-close-lb]')) closeLbModal();
   });
 
-  /* ================= 升级面板 ================= */
-  function renderUpgradeList() {
-    const pts = currentPoints();
-    const upgObj = (currentProfile && currentProfile.upgrades) || defaultUpgrades();
+  /* ============================================================
+   *  升级面板
+   * ============================================================ */
+  function totalUpgradeLevel() {
+    let sum = 0;
+    for (const def of upgradeDefs) {
+      sum += getUpgradeLevel(def.key);
+    }
+    return sum;
+  }
 
+  function renderUpgradeList() {
+    if (!upgradeDefs.length) {
+      upgradeList.innerHTML = '<div class="empty">没有可用的升级项</div>';
+      upgradeBadge.textContent = '0 级';
+      return;
+    }
+
+    const pts = currentProfile ? currentProfile.points : 0;
     upgradeBadge.textContent = totalUpgradeLevel() + ' 级';
 
-    upgradeList.innerHTML = UPGRADES.map(u => {
-      const level = Number(upgObj[u.key]) || 0;
-      const isMax = level >= u.maxLevel;
-      const cost = isMax ? 0 : u.cost(level);
+    upgradeList.innerHTML = upgradeDefs.map(def => {
+      const level = getUpgradeLevel(def.key);
+      const isMax = level >= def.maxLevel;
+      const cost = isMax ? 0 : calcCost(def, level);
       const canBuy = !isMax && pts >= cost;
       const poor = !isMax && pts < cost;
+      const eff = effectText(def, level);
 
-      const effectText = u.effectText(level);
-
-      // 等级显示：小等级用点，大等级用数字
       let lvHtml;
-      if (u.maxLevel <= 10) {
-        lvHtml = Array.from({ length: u.maxLevel }, (_, i) =>
+      if (def.maxLevel <= 10) {
+        lvHtml = Array.from({ length: def.maxLevel }, (_, i) =>
           '<i class="' + (i < level ? 'on' : '') + '"></i>'
         ).join('');
       } else {
-        lvHtml = '<span class="upgrade-level-text">' + level + ' / ' + u.maxLevel + '</span>';
+        lvHtml = '<span class="upgrade-level-text">' + level + ' / ' + def.maxLevel + '</span>';
       }
 
       let btnHtml;
       if (isMax) {
         btnHtml = '<button class="btn ghost" disabled>已满级</button>';
       } else if (canBuy) {
-        btnHtml = '<button class="btn gold" data-buy="' + u.key + '">升级</button>';
+        btnHtml = '<button class="btn gold" data-buy="' + def.key + '">升级</button>';
       } else {
         btnHtml = '<button class="btn ghost" disabled>点数不足</button>';
       }
 
-      return '<div class="upgrade-item' + (isMax ? ' is-max' : (canBuy ? ' can-buy' : '')) + '" data-key="' + u.key + '">'
+      return '<div class="upgrade-item' + (isMax ? ' is-max' : (canBuy ? ' can-buy' : '')) + '" data-key="' + def.key + '">'
         + '<div class="upgrade-head">'
-        +   '<div class="upgrade-icon">' + u.icon + '</div>'
+        +   '<div class="upgrade-icon">' + (def.icon || '⚡') + '</div>'
         +   '<div class="upgrade-info">'
-        +     '<h4>' + escapeHtml(u.name) + '</h4>'
-        +     '<p>' + escapeHtml(u.desc) + '</p>'
-        +     '<span class="upgrade-effect">' + escapeHtml(effectText) + '</span>'
+        +     '<h4>' + escapeHtml(def.name) + '</h4>'
+        +     (def.desc ? '<p>' + escapeHtml(def.desc) + '</p>' : '')
+        +     '<span class="upgrade-effect">' + escapeHtml(eff) + '</span>'
         +   '</div>'
         +   '<div class="upgrade-lv">' + lvHtml + '</div>'
         + '</div>'
@@ -1026,17 +1078,14 @@
       return;
     }
 
-    const u = UPGRADES.find(x => x.key === key);
-    if (!u) return;
+    const def = findDef(key);
+    if (!def) { alert('该升级项不存在'); return; }
 
     const level = getUpgradeLevel(key);
-    if (level >= u.maxLevel) {
-      alert('已经满级啦');
-      return;
-    }
+    if (level >= def.maxLevel) { alert('已经满级啦'); return; }
 
-    const cost = u.cost(level);
-    if (currentPoints() < cost) {
+    const cost = calcCost(def, level);
+    if (currentProfile.points < cost) {
       alert('点数不足，需要 ' + formatPrice(cost) + ' 点');
       return;
     }
@@ -1048,7 +1097,7 @@
     const { data, error } = await sb.rpc('purchase_upgrade', {
       p_key: key,
       p_cost: cost,
-      p_max: u.maxLevel
+      p_max: def.maxLevel
     });
 
     if (error) {
@@ -1073,7 +1122,7 @@
       return;
     }
 
-    const newUpg = Object.assign({}, currentProfile.upgrades || defaultUpgrades());
+    const newUpg = Object.assign({}, currentProfile.upgrades || {});
     newUpg[key] = Number(res.level) || (level + 1);
 
     setProfile({
@@ -1089,10 +1138,8 @@
       setTimeout(() => newItem.classList.remove('flash'), 850);
     }
 
-    // 速度升级后，重启自动点击计时器以应用新间隔
-    if (key === 'autoClick') {
-      startAutoClick();
-    }
+    // 自动点击相关升级后，检查是否需要重启定时器
+    restartAutoClickIfNeeded();
   }
 
   upgradeList.addEventListener('click', function (e) {
@@ -1101,7 +1148,9 @@
     purchaseUpgrade(btn.dataset.buy);
   });
 
-  /* ================= 登录弹窗 ================= */
+  /* ============================================================
+   *  登录弹窗
+   * ============================================================ */
   function openAuthModal(mode, forced) {
     if (!sb) return;
     authForced = !!forced;
@@ -1211,12 +1260,13 @@
     await sb.auth.signOut();
   }
 
-  /* ================= 事件绑定 ================= */
+  /* ============================================================
+   *  事件绑定
+   * ============================================================ */
   clickBtn.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (!currentUser) { openAuthModal('login', true); return; }
     if (!currentProfile) return;
-
     doClick(false);
   });
 
@@ -1257,21 +1307,20 @@
   });
 
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
-      syncProgress(true);
-    } else {
-      refreshLeaderboard();
-    }
+    if (document.hidden) syncProgress(true);
+    else refreshLeaderboard();
   });
 
-  /* ================= 认证状态 ================= */
+  /* ============================================================
+   *  认证状态
+   * ============================================================ */
   async function onSignedIn(session) {
     currentUser = session.user;
     renderUserBar();
 
     let p = await ensureProfile();
     if (!p) {
-      p = { id: currentUser.id, points: 0, total_clicks: 0, upgrades: defaultUpgrades() };
+      p = { id: currentUser.id, points: 0, total_clicks: 0, upgrades: {} };
     }
     setProfile(p);
 
@@ -1320,11 +1369,23 @@
     openAuthModal('login', true);
   }
 
-  /* ================= 初始化 ================= */
+  /* ============================================================
+   *  初始化
+   * ============================================================ */
   async function init() {
     buildParticles();
     renderUserBar();
+
+    // 先用内置配置渲染一次，避免首屏空白
     renderUpgradeList();
+
+    // 异步加载外部配置，成功后重新渲染
+    loadUpgradeConfig().then(() => {
+      renderUpgradeList();
+      // 如果已经在游戏中，可能需要更新自动点击定时器
+      restartAutoClickIfNeeded();
+    });
+
     setSyncChip('等待登录…', false);
 
     if (!sb) {
