@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "upgrades": [
+    {
+      "key": "autoClick",
+      "icon": "🤖",
+      "name": "自动点击[速度]",
+      "desc": "自动帮你点击按钮",
+      "maxLevel": 5,
+      "cost": {
+        "type": "exponential",
+        "base": 5,
+        "growth": 4
+      },
+      "effect": {
+        "type": "autoClickInterval",
+        "params": {
+          "intervals": [0, 2000, 1200, 800, 600, 400]
+        },
+        "texts": {
+          "empty": "尚未解锁",
+          "value": "每 {sec} 秒自动点击一次"
+        }
+      }
+    },
+    {
+      "key": "autoMultiplier",
+      "icon": "💥",
+      "name": "自动点击[倍率]",
+      "desc": "每次自动点击附加额外点击",
+      "maxLevel": 100,
+      "cost": {
+        "type": "segmented",
+        "base": 100,
+        "segments": [
+          { "until": 5,   "growth": 1.5 },
+          { "until": 15,  "growth": 2   },
+          { "until": 50,  "growth": 2.4 },
+          { "until": 100, "growth": 1.2 }
+        ]
+      },
+      "effect": {
+        "type": "autoClickMultiplier",
+        "params": {},
+        "texts": {
+          "empty": "尚未解锁",
+          "value": "每次自动点击 ×{value}"
+        }
+      }
+    }
+  ]
+}
