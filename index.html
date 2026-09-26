@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0c1a">
-<meta name="description" content="限时点击挑战小游戏，登录后可上传成绩和升级">
-<title>⚡ 疯狂点击 · 限时挑战</title>
+<meta name="description" content="无尽点击挑战小游戏，登录后可上传成绩和升级">
+<title>⚡ 疯狂点击 · 无尽模式</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <style>
   :root{
@@ -19,6 +19,7 @@
     --accent2:#8b5bff;
     --gold:#ffcc66;
     --good:#33d17a;
+    --danger:#ff7a7a;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
@@ -84,11 +85,7 @@
   .hud-item .label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;letter-spacing:.5px}
   .hud-item .val{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
 
-  .progress{height:8px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.07);margin-bottom:14px}
-  .progress > i{display:block;height:100%;width:0;border-radius:99px;
-    background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .08s linear}
-
-  /* ===== 按钮：GPU 加速 + 原生 :active 反馈 ===== */
+  /* ===== 大按钮：GPU 加速 ===== */
   .click-btn{
     display:block;width:100%;
     height:clamp(180px,32vh,270px);
@@ -97,24 +94,17 @@
     color:#fff;font-family:inherit;
     font-size:clamp(22px,5.5vw,32px);font-weight:800;letter-spacing:3px;
     cursor:pointer;
-
-    /* 关键：杜绝浏览器默认行为，消除点击延迟 */
     touch-action:manipulation;
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;user-select:none;
-
-    /* 关键：GPU 加速层 + 平滑过渡 */
     will-change:transform;
     transform:translateZ(0) scale(1);
     backface-visibility:hidden;
     -webkit-backface-visibility:hidden;
-
-    /* 只对合成属性做过渡，绝不动 top/left/margin 之类 */
     transition:
       transform .07s cubic-bezier(.2,.8,.3,1),
       background .2s ease,
       box-shadow .2s ease;
-
     box-shadow:0 16px 34px -14px rgba(91,124,255,.9),inset 0 -4px 0 rgba(0,0,0,.22);
   }
   .click-btn.is-playing{
@@ -122,20 +112,31 @@
     box-shadow:0 16px 34px -14px rgba(255,107,107,.9),inset 0 -4px 0 rgba(0,0,0,.22);
     letter-spacing:6px;
   }
-  /* 按下：立即缩小，抬起自动弹回，全靠浏览器原生状态 */
   .click-btn:not(:disabled):active{
     transform:translateZ(0) scale(.955);
     transition-duration:.03s;
   }
-  .click-btn:disabled{
-    filter:grayscale(.55) brightness(.75);
-    cursor:not-allowed;box-shadow:none;
+  .click-btn:disabled{filter:grayscale(.55) brightness(.75);cursor:not-allowed;box-shadow:none}
+
+  .auto-info{
+    margin-top:10px;
+    text-align:center;
+    font-size:13px;font-weight:600;
+    color:#7be2a8;
+    background:rgba(51,209,122,.09);
+    border:1px solid rgba(51,209,122,.28);
+    border-radius:11px;
+    padding:8px 12px;
+    animation:fadeUp .25s ease;
   }
+  .auto-info.hidden{display:none}
+
+  .stop-row{margin-top:10px}
+  .stop-row.hidden{display:none}
 
   .result{margin-top:14px;padding:16px;border-radius:16px;
     background:rgba(255,255,255,.04);border:1px solid var(--line);animation:fadeUp .25s ease}
   .result.hidden{display:none}
-  .result.win{border-color:rgba(51,209,122,.45);background:rgba(51,209,122,.09)}
   @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
   .result-score{font-size:44px;font-weight:800;text-align:center;line-height:1;
@@ -163,7 +164,10 @@
   .btn.ghost{background:rgba(255,255,255,.07);color:var(--text)}
   .btn.ghost:hover{background:rgba(255,255,255,.11)}
   .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700}
+  .btn.danger{background:rgba(255,90,90,.15);color:#ff9a9a;border:1px solid rgba(255,90,90,.35)}
+  .btn.danger:hover{background:rgba(255,90,90,.25)}
   .btn.block{width:100%}
+  .btn.tiny{padding:8px 12px;font-size:13px;border-radius:10px}
   .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
   .stack{display:flex;flex-direction:column;gap:8px;margin-top:2px}
 
@@ -173,11 +177,9 @@
   .badge.cloud{background:rgba(51,209,122,.16);color:#5fe0a0}
   .badge.warn{background:rgba(255,150,60,.16);color:#ffb066}
 
-  #leaderboard{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto;
-    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
-  #leaderboard::-webkit-scrollbar{width:6px}
-  #leaderboard::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
-
+  /* ===== 排行榜折叠 ===== */
+  .lb-wrap{display:flex;flex-direction:column;gap:6px}
+  .lb-wrap.collapsed .lb-row.extra{display:none}
   .lb-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;
     background:rgba(255,255,255,.035);font-size:14px;transition:background .2s}
   .lb-row.is-me{background:rgba(91,140,255,.14);box-shadow:inset 0 0 0 1px rgba(91,140,255,.4)}
@@ -188,6 +190,20 @@
   .lb-meta{flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   .lb-score{flex:none;min-width:40px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
   .empty{color:#7b81ad;font-size:14px;text-align:center;padding:28px 8px}
+
+  .lb-toggle{
+    margin-top:10px;
+    background:rgba(255,255,255,.05);
+    border:1px dashed rgba(255,255,255,.15);
+    color:#9db4ff;
+    font-size:13px;font-weight:600;
+    padding:8px 12px;border-radius:11px;
+    cursor:pointer;width:100%;
+    font-family:inherit;
+    transition:background .15s;
+  }
+  .lb-toggle:hover{background:rgba(255,255,255,.09)}
+  .lb-toggle.hidden{display:none}
 
   .upgrade-panel .points-hint{
     text-align:center;
@@ -201,10 +217,8 @@
     border:1px solid rgba(255,255,255,.06);
     border-radius:14px;
     padding:12px;
-    margin-bottom:9px;
     transition:border-color .2s,background .2s;
   }
-  .upgrade-item:last-child{margin-bottom:0}
   .upgrade-item.is-max{
     background:linear-gradient(135deg,rgba(255,204,102,.09),rgba(255,204,102,.02));
     border-color:rgba(255,204,102,.3);
@@ -299,7 +313,7 @@
 <div class="wrap">
   <header>
     <h1>⚡ 疯狂点击</h1>
-    <p class="sub">在 <b id="durLabel">10</b> 秒内点击尽可能多次 · 目标 <b id="targetLabel">50</b> 次</p>
+    <p class="sub">无尽模式 · 想点多久点多久 · 每 <b>10</b> 次点击 = <b>1</b> 💎</p>
   </header>
 
   <div class="user-bar">
@@ -312,14 +326,18 @@
     <div class="left-col">
       <section class="panel">
         <div class="hud">
-          <div class="hud-item"><span class="label">剩余时间</span><span class="val" id="timer">10.00</span></div>
+          <div class="hud-item"><span class="label">用时</span><span class="val" id="timer">00:00</span></div>
           <div class="hud-item"><span class="label">点击次数</span><span class="val" id="count">0</span></div>
           <div class="hud-item"><span class="label">每秒点击</span><span class="val" id="cps">0.0</span></div>
         </div>
 
-        <div class="progress"><i id="bar"></i></div>
-
         <button id="clickBtn" class="click-btn" type="button">开始挑战</button>
+
+        <div id="autoInfo" class="auto-info hidden"></div>
+
+        <div class="stop-row hidden" id="stopRow">
+          <button id="stopBtn" class="btn danger block" type="button">结束挑战</button>
+        </div>
 
         <div id="result" class="result hidden">
           <div class="result-score"><span id="resultScore">0</span><small>次</small></div>
@@ -334,14 +352,15 @@
 
       <section class="panel upgrade-panel">
         <h2>⚡ 升级 <span class="badge" id="upgradeBadge">0 级</span></h2>
-        <p class="points-hint">当前点数 <b id="pointsHint">0</b> · 每次上传成绩可获得 <b>点击次数 / 10</b> 点数</p>
+        <p class="points-hint">当前点数 <b id="pointsHint">0</b> · 每 10 次点击 = 1 💎</p>
         <div id="upgradeList"></div>
       </section>
     </div>
 
     <section class="panel">
       <h2>🏆 排行榜 <span class="badge" id="lbBadge">加载中…</span></h2>
-      <div id="leaderboard"><div class="empty">加载中…</div></div>
+      <div id="leaderboard" class="lb-wrap collapsed"></div>
+      <button id="lbToggle" class="lb-toggle hidden" type="button">展开全部 ▼</button>
     </section>
   </div>
 
@@ -388,9 +407,10 @@
   'use strict';
 
   const CONFIG = {
-    DURATION: 10000,
-    TARGET: 50,
     SHOW: 20,
+    LB_PREVIEW: 3,                         // 折叠时显示前 N 名
+    LB_REFRESH_MS: 10 * 60 * 1000,         // 排行榜 10 分钟刷新一次
+    POINT_PER_CLICKS: 10,                  // 每 10 次点击 = 1 点数
 
     SUPABASE_URL: 'https://ideuctxwohmwdbdtjyuh.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkZXVjdHh3b2htd2RiZHRqeXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MjE4MDUsImV4cCI6MjEwNTk5NzgwNX0.YPy9y6njWnU5J3ptf1rSKImAVfnAnUR1TbljOd2D-EE',
@@ -399,41 +419,27 @@
     EMAIL_DOMAIN: '@clicks.game'
   };
 
+  // 自动点击等级 → 间隔（毫秒），索引即等级
+  const AUTO_INTERVALS = [0, 2000, 1200, 800, 600, 400];
+
   const UPGRADES = [
     {
-      key: 'time',
-      icon: '⏱',
-      name: '时间延长',
-      desc: '每级游戏时长 +0.5 秒',
-      maxLevel: 5,
-      baseCost: 25,
-      growth: 1.6,
-      effectText: lv => lv === 0 ? '尚未升级' : `已延长 +${(lv * 0.5).toFixed(1)} 秒`
-    },
-    {
-      key: 'target',
-      icon: '🎯',
-      name: '目标降低',
-      desc: '每级目标次数 -4 次',
+      key: 'autoClick',
+      icon: '🤖',
+      name: '自动点击',
+      desc: '自动帮你点击按钮，升级后价格翻倍',
       maxLevel: 5,
       baseCost: 20,
-      growth: 1.6,
-      effectText: lv => lv === 0 ? '尚未升级' : `目标已降至 ${Math.max(10, CONFIG.TARGET - lv * 4)} 次`
-    },
-    {
-      key: 'multiplier',
-      icon: '💎',
-      name: '点数加成',
-      desc: '每级额外获得 15% 点数',
-      maxLevel: 5,
-      baseCost: 40,
-      growth: 1.8,
-      effectText: lv => lv === 0 ? '尚未升级' : `点数收益 +${lv * 15}%`
+      growth: 2,
+      effectText: lv => {
+        if (lv === 0) return '尚未解锁';
+        return '每 ' + (AUTO_INTERVALS[lv] / 1000).toFixed(1) + ' 秒自动点击一次';
+      }
     }
   ];
 
   function upgradeCost(u, level) {
-    return Math.floor(u.baseCost * Math.pow(u.growth, level));
+    return u.baseCost * Math.pow(u.growth, level);
   }
 
   let sb = null;
@@ -446,16 +452,16 @@
   }
 
   const $ = id => document.getElementById(id);
-  const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps'), barEl = $('bar');
+  const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps');
   const clickBtn = $('clickBtn');
+  const autoInfo = $('autoInfo'), stopRow = $('stopRow'), stopBtn = $('stopBtn');
   const resultEl = $('result'), resultScoreEl = $('resultScore'), resultMsgEl = $('resultMsg'),
         resultRewardEl = $('resultReward');
   const saveBtn = $('saveBtn'), againBtn = $('againBtn');
-  const lbEl = $('leaderboard'), lbBadge = $('lbBadge');
+  const lbEl = $('leaderboard'), lbBadge = $('lbBadge'), lbToggle = $('lbToggle');
   const userText = $('userText'), userAction = $('userAction');
   const pointsVal = $('pointsVal'), pointsHint = $('pointsHint');
   const upgradeList = $('upgradeList'), upgradeBadge = $('upgradeBadge');
-  const durLabel = $('durLabel'), targetLabel = $('targetLabel');
   const authModal = $('authModal'), authForm = $('authForm');
   const authUsername = $('authUsername'), authPassword = $('authPassword');
   const authSubmit = $('authSubmit'), authError = $('authError'), authInfo = $('authInfo');
@@ -463,24 +469,37 @@
   const modalCloseBtn = authModal.querySelector('.modal-close');
   const tabBtns = authModal.querySelectorAll('.tab[data-tab]');
 
-  let phase = 'idle';
+  /* ================= 状态 ================= */
+  let phase = 'idle';          // idle | playing | finished
   let clicks = 0;
-  let endAt = 0;
-  let rafId = 0;
+  let startAt = 0;
+  let uiTimer = null;
+  let autoClickTimer = null;
   let lastScore = 0;
   let lastEarnedPoints = 0;
-  let currentParams = null;
   let currentUser = null;
   let currentProfile = null;
   let authMode = 'login';
   let submitting = false;
   let authForced = true;
+  let lbExpanded = false;
+  let lbRefreshTimer = null;
+  let lbData = [];
 
   /* ================= 工具 ================= */
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => (
       { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
     ));
+  }
+
+  function formatTime(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
 
   function usernameOf(u) {
@@ -503,30 +522,17 @@
   }
 
   function defaultUpgrades() {
-    return { time: 0, target: 0, multiplier: 0 };
-  }
-
-  /* ================= 游戏参数 ================= */
-  function computeParams() {
-    const u = (currentProfile && currentProfile.upgrades) || defaultUpgrades();
-    return {
-      duration: CONFIG.DURATION + (u.time || 0) * 500,
-      target: Math.max(10, CONFIG.TARGET - (u.target || 0) * 4),
-      multiplier: 1 + (u.multiplier || 0) * 0.15
-    };
-  }
-
-  function refreshConfigLabels() {
-    const p = computeParams();
-    durLabel.textContent = (p.duration / 1000).toFixed(1).replace(/\.0$/, '');
-    targetLabel.textContent = p.target;
-    resetHud();
+    return { autoClick: 0 };
   }
 
   function totalUpgradeLevel() {
     if (!currentProfile || !currentProfile.upgrades) return 0;
-    const u = currentProfile.upgrades;
-    return (u.time || 0) + (u.target || 0) + (u.multiplier || 0);
+    return currentProfile.upgrades.autoClick || 0;
+  }
+
+  function currentAutoLevel() {
+    if (!currentProfile || !currentProfile.upgrades) return 0;
+    return currentProfile.upgrades.autoClick || 0;
   }
 
   /* ================= Profile ================= */
@@ -544,7 +550,26 @@
   async function ensureProfile() {
     if (!sb || !currentUser) return null;
     let p = await loadProfile();
-    if (p) return p;
+    if (p) {
+      // 兼容旧数据结构：upgrades 里可能有 time/target/multiplier，需要迁移
+      const upg = p.upgrades || {};
+      const hasOld = upg.time !== undefined || upg.target !== undefined || upg.multiplier !== undefined;
+      const hasNew = upg.autoClick !== undefined;
+      if (hasOld && !hasNew) {
+        const cleaned = { autoClick: 0 };
+        const { error } = await sb.from(CONFIG.PROFILES)
+          .update({ upgrades: cleaned })
+          .eq('id', currentUser.id);
+        if (!error) return { ...p, upgrades: cleaned };
+      } else if (!hasNew) {
+        const cleaned = { ...upg, autoClick: 0 };
+        const { error } = await sb.from(CONFIG.PROFILES)
+          .update({ upgrades: cleaned })
+          .eq('id', currentUser.id);
+        if (!error) return { ...p, upgrades: cleaned };
+      }
+      return p;
+    }
     const { error } = await sb
       .from(CONFIG.PROFILES)
       .insert({ id: currentUser.id, points: 0, upgrades: defaultUpgrades() });
@@ -556,6 +581,7 @@
     currentProfile = p;
     renderUserBar();
     renderUpgradeList();
+    updateAutoInfo();
   }
 
   function renderUserBar() {
@@ -580,11 +606,10 @@
     }
   }
 
-  /* ================= 排行榜（每用户去重，保留最高分）================= */
+  /* ================= 排行榜（每用户去重）================= */
   async function fetchScores() {
     if (!sb) throw new Error('云端不可用');
 
-    // 多取一些，给去重留余量（一个用户可能有好几条记录）
     const fetchLimit = Math.max(CONFIG.SHOW * 10, 200);
 
     const { data, error } = await sb
@@ -596,7 +621,7 @@
 
     if (error) throw error;
 
-    // 按 user_id 去重，因为已经按 score 降序，第一次出现的就是该用户最高分
+    // 每个 user_id 只保留最高分（已按分数降序，第一次出现就是最高分）
     const seen = new Set();
     const deduped = [];
     for (const r of (data || [])) {
@@ -618,25 +643,46 @@
   }
 
   function renderLeaderboard(list) {
-    const arr = (list || []).slice(0, CONFIG.SHOW);
-    if (!arr.length) {
+    lbData = list || [];
+    const total = lbData.length;
+
+    if (!total) {
       lbEl.innerHTML = '<div class="empty">还没有记录，快来抢占第一名！</div>';
+      lbToggle.classList.add('hidden');
       return;
     }
+
     const medals = ['🥇','🥈','🥉'];
     const myId = currentUser ? currentUser.id : null;
 
-    lbEl.innerHTML = arr.map((it, i) => {
+    lbEl.innerHTML = lbData.map((it, i) => {
       const rank = i + 1;
       const mark = rank <= 3 ? medals[rank - 1] : rank;
       const isMe = myId && it.user_id === myId;
-      return '<div class="lb-row' + (isMe ? ' is-me' : '') + '">'
+      const isExtra = rank > CONFIG.LB_PREVIEW;
+
+      return '<div class="lb-row'
+        + (isMe ? ' is-me' : '')
+        + (isExtra ? ' extra' : '')
+        + '">'
         + '<span class="lb-rank">' + mark + '</span>'
         + '<span class="lb-name">' + escapeHtml(it.name) + (isMe ? '<em>我</em>' : '') + '</span>'
         + '<span class="lb-meta">' + it.cps.toFixed(1) + '/s</span>'
         + '<span class="lb-score">' + it.score + '</span>'
         + '</div>';
     }).join('');
+
+    // 折叠状态由 lbExpanded 控制
+    lbEl.classList.toggle('collapsed', !lbExpanded);
+
+    if (total > CONFIG.LB_PREVIEW) {
+      lbToggle.classList.remove('hidden');
+      lbToggle.textContent = lbExpanded
+        ? '收起 ▲'
+        : '展开全部（' + total + ' 名）▼';
+    } else {
+      lbToggle.classList.add('hidden');
+    }
   }
 
   async function refreshLeaderboard() {
@@ -657,8 +703,24 @@
       lbBadge.className = 'badge warn';
       const hint = (err && err.message) ? escapeHtml(err.message) : '请稍后重试';
       lbEl.innerHTML = '<div class="empty">排行榜加载失败<br><span style="font-size:12px;opacity:.7">' + hint + '</span></div>';
+      lbToggle.classList.add('hidden');
     }
   }
+
+  // 每 10 分钟自动刷新（页面可见时才刷）
+  function startLbAutoRefresh() {
+    if (lbRefreshTimer) clearInterval(lbRefreshTimer);
+    lbRefreshTimer = setInterval(() => {
+      if (document.hidden) return;
+      if (!currentUser) return;
+      refreshLeaderboard();
+    }, CONFIG.LB_REFRESH_MS);
+  }
+
+  lbToggle.addEventListener('click', function () {
+    lbExpanded = !lbExpanded;
+    renderLeaderboard(lbData);
+  });
 
   /* ================= 升级面板 ================= */
   function renderUpgradeList() {
@@ -750,13 +812,15 @@
 
     const newUpg = Object.assign({}, currentProfile.upgrades || defaultUpgrades());
     newUpg[key] = res.level;
+
     setProfile({
       id: currentProfile.id,
       points: res.points,
       upgrades: newUpg
     });
 
-    refreshConfigLabels();
+    // 游戏中购买 → 立刻生效
+    if (phase === 'playing') startAutoClick();
   }
 
   upgradeList.addEventListener('click', function (e) {
@@ -766,94 +830,116 @@
   });
 
   /* ================= 游戏逻辑 ================= */
+  function updateHud() {
+    if (phase !== 'playing') return;
+    const elapsed = Date.now() - startAt;
+    timerEl.textContent = formatTime(elapsed);
+    cpsEl.textContent = (clicks / Math.max(elapsed / 1000, 0.5)).toFixed(1);
+  }
+
   function resetHud() {
-    const p = computeParams();
-    timerEl.textContent = (p.duration / 1000).toFixed(2);
+    timerEl.textContent = '00:00';
     countEl.textContent = '0';
     cpsEl.textContent = '0.0';
-    barEl.style.width = '0%';
+  }
+
+  function updateAutoInfo() {
+    const lv = currentAutoLevel();
+    if (phase === 'playing' && lv > 0) {
+      autoInfo.textContent = '🤖 自动点击中 · 每 ' + (AUTO_INTERVALS[lv] / 1000).toFixed(1) + ' 秒一次';
+      autoInfo.classList.remove('hidden');
+    } else {
+      autoInfo.classList.add('hidden');
+    }
+  }
+
+  function startAutoClick() {
+    stopAutoClick();
+    const lv = currentAutoLevel();
+    if (lv <= 0) { updateAutoInfo(); return; }
+    const interval = AUTO_INTERVALS[lv];
+    autoClickTimer = setInterval(() => {
+      if (phase !== 'playing') return;
+      clicks++;
+      countEl.textContent = clicks;
+    }, interval);
+    updateAutoInfo();
+  }
+
+  function stopAutoClick() {
+    if (autoClickTimer) { clearInterval(autoClickTimer); autoClickTimer = null; }
   }
 
   function startGame() {
     if (!currentUser) { openAuthModal('login', true); return; }
     if (!sb) return;
-    if (!currentProfile) {
-      alert('正在加载你的数据，请稍候…');
-      return;
-    }
+    if (!currentProfile) { alert('正在加载你的数据，请稍候…'); return; }
 
-    currentParams = computeParams();
     clicks = 0;
+    startAt = Date.now();
     lastEarnedPoints = 0;
+
     resultEl.classList.add('hidden');
-    resultEl.classList.remove('win');
     resetHud();
 
     clickBtn.disabled = false;
     clickBtn.textContent = '点！';
     clickBtn.classList.add('is-playing');
 
+    stopRow.classList.remove('hidden');
+
     phase = 'playing';
-    const now = performance.now();
-    endAt = now + currentParams.duration;
+    updateHud();
+    updateAutoInfo();
 
-    cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(tick);
+    if (uiTimer) clearInterval(uiTimer);
+    uiTimer = setInterval(updateHud, 100);
+
+    startAutoClick();
   }
 
-  function tick(now) {
-    if (phase !== 'playing' || !currentParams) return;
-    const left = Math.max(0, endAt - now);
-    const elapsed = currentParams.duration - left;
+  function endGame() {
+    if (phase !== 'playing') return;
+    phase = 'finished';
 
-    timerEl.textContent = (left / 1000).toFixed(2);
-    cpsEl.textContent = (clicks / Math.max(elapsed, 250) * 1000).toFixed(1);
-    barEl.style.width = Math.min(1, clicks / currentParams.target) * 100 + '%';
+    stopAutoClick();
+    if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
+    updateAutoInfo();
 
-    if (left <= 0) { endGame(); return; }
-    rafId = requestAnimationFrame(tick);
+    clickBtn.disabled = false;
+    clickBtn.classList.remove('is-playing');
+    clickBtn.textContent = '再来一局';
+
+    stopRow.classList.add('hidden');
+
+    lastScore = clicks;
+    const elapsed = Date.now() - startAt;
+    const cps = clicks / Math.max(elapsed / 1000, 0.5);
+    lastEarnedPoints = Math.floor(lastScore / CONFIG.POINT_PER_CLICKS);
+
+    resultScoreEl.textContent = lastScore;
+    resultMsgEl.textContent = '用时 ' + formatTime(elapsed) + ' · 平均 ' + cps.toFixed(1) + ' 次/秒';
+
+    if (lastEarnedPoints > 0) {
+      resultRewardEl.textContent = '💎 上传可获得 ' + lastEarnedPoints + ' 点数';
+      resultRewardEl.classList.remove('hidden');
+      saveBtn.textContent = '上传成绩 · 获得 ' + lastEarnedPoints + ' 💎';
+    } else {
+      resultRewardEl.textContent = '💎 点击满 ' + CONFIG.POINT_PER_CLICKS + ' 次才能获得点数';
+      resultRewardEl.classList.remove('hidden');
+      saveBtn.textContent = '上传成绩（无点数）';
+    }
+
+    resultEl.classList.remove('hidden');
+    saveBtn.disabled = false;
   }
 
-  // 关键：只更新数据，不触发任何强制重排
+  // 手动点击
   function registerClick() {
     if (phase !== 'playing') return;
     clicks++;
     countEl.textContent = clicks;
-    // 触觉反馈（可选，短促）
     if (navigator.vibrate) { try { navigator.vibrate(6); } catch (e) {} }
-  }
-
-  function endGame() {
-    cancelAnimationFrame(rafId);
-    rafId = 0;
-    phase = 'finished';
-
-    clickBtn.disabled = true;
-    clickBtn.classList.remove('is-playing');
-    clickBtn.textContent = '挑战结束';
-
-    lastScore = clicks;
-    const p = currentParams || computeParams();
-    const cps = lastScore / (p.duration / 1000);
-    const win = lastScore >= p.target;
-
-    const raw = Math.floor(lastScore / 10);
-    const earned = Math.max(1, Math.floor(raw * p.multiplier));
-    lastEarnedPoints = earned;
-
-    resultScoreEl.textContent = lastScore;
-    resultMsgEl.textContent = win
-      ? '🎉 目标达成！平均 ' + cps.toFixed(1) + ' 次/秒'
-      : '离目标还差 ' + (p.target - lastScore) + ' 次 · 平均 ' + cps.toFixed(1) + ' 次/秒';
-
-    resultRewardEl.textContent = '💎 上传可获得 ' + earned + ' 点数';
-    resultRewardEl.classList.remove('hidden');
-
-    resultEl.classList.remove('hidden');
-    resultEl.classList.toggle('win', win);
-
-    saveBtn.disabled = false;
-    saveBtn.textContent = '上传成绩 · 获得 ' + earned + ' 💎';
   }
 
   /* ================= 上传成绩 ================= */
@@ -865,8 +951,8 @@
     saveBtn.disabled = true;
     saveBtn.textContent = '上传中…';
 
-    const p = currentParams || computeParams();
-    const cps = Number((lastScore / (p.duration / 1000)).toFixed(2));
+    const elapsed = Date.now() - startAt;
+    const cps = Number((lastScore / Math.max(elapsed / 1000, 0.5)).toFixed(2));
 
     const { data, error } = await sb.rpc('submit_score', {
       p_name: usernameOf(currentUser),
@@ -898,6 +984,8 @@
     }
 
     saveBtn.textContent = '已上传 ✓ +' + lastEarnedPoints + ' 💎';
+
+    // 上传后立即刷新一次（10 分钟自动刷新照旧）
     await refreshLeaderboard();
   }
 
@@ -1011,28 +1099,16 @@
   }
 
   /* ================= 事件绑定 ================= */
-  // 关键：只在 pointerdown 计数，不 preventDefault（保留原生 :active）
   clickBtn.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
 
     if (!currentUser) { openAuthModal('login', true); return; }
 
     if (phase === 'playing') registerClick();
-    else if (phase === 'idle') startGame();
+    else startGame();
   });
 
-  document.addEventListener('keydown', function (e) {
-    if (e.code !== 'Space' && e.code !== 'Enter') return;
-    if (e.repeat) return;
-    if (authModal && !authModal.classList.contains('hidden')) return;
-    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
-    if (!currentUser) return;
-
-    e.preventDefault();
-    if (phase === 'playing') registerClick();
-    else if (phase === 'idle') startGame();
-  });
-
+  stopBtn.addEventListener('click', endGame);
   againBtn.addEventListener('click', startGame);
   saveBtn.addEventListener('click', handleSave);
 
@@ -1053,10 +1129,25 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Escape') return;
-    if (authModal.classList.contains('hidden')) return;
-    if (authForced && !currentUser) return;
-    closeAuthModal();
+    if (e.key === 'Escape') {
+      if (!authModal.classList.contains('hidden')) {
+        if (authForced && !currentUser) return;
+        closeAuthModal();
+        return;
+      }
+    }
+
+    // 空格：游戏中 = 点击；非游戏中 = 开始
+    if (e.code === 'Space' || e.code === 'Enter') {
+      if (e.repeat) return;
+      if (!authModal.classList.contains('hidden')) return;
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+      if (!currentUser) return;
+
+      e.preventDefault();
+      if (phase === 'playing') registerClick();
+      else startGame();
+    }
   });
 
   /* ================= 认证状态 ================= */
@@ -1071,17 +1162,31 @@
     setProfile(p);
 
     closeAuthModal();
-    refreshConfigLabels();
     refreshLeaderboard();
     renderUpgradeList();
+    updateAutoInfo();
   }
 
   function onSignedOut() {
+    // 停止所有计时器
+    stopAutoClick();
+    if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
+    if (lbRefreshTimer) { clearInterval(lbRefreshTimer); lbRefreshTimer = null; }
+
+    phase = 'idle';
     currentUser = null;
     currentProfile = null;
+    resetHud();
+
+    clickBtn.disabled = false;
+    clickBtn.classList.remove('is-playing');
+    clickBtn.textContent = '开始挑战';
+    stopRow.classList.add('hidden');
+    resultEl.classList.add('hidden');
+    autoInfo.classList.add('hidden');
+
     renderUserBar();
     renderUpgradeList();
-    refreshConfigLabels();
     refreshLeaderboard();
     openAuthModal('login', true);
   }
@@ -1125,7 +1230,14 @@
       refreshLeaderboard();
     }
 
-    refreshConfigLabels();
+    // 页面切回前台时，如果 10 分钟已过，立即刷新一次
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && currentUser) {
+        refreshLeaderboard();
+      }
+    });
+
+    startLbAutoRefresh();
   }
 
   init();
