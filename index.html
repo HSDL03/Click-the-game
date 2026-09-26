@@ -88,6 +88,7 @@
   .progress > i{display:block;height:100%;width:0;border-radius:99px;
     background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .08s linear}
 
+  /* ===== 按钮：GPU 加速 + 原生 :active 反馈 ===== */
   .click-btn{
     display:block;width:100%;
     height:clamp(180px,32vh,270px);
@@ -95,19 +96,41 @@
     background:linear-gradient(160deg,var(--accent),var(--accent2) 70%);
     color:#fff;font-family:inherit;
     font-size:clamp(22px,5.5vw,32px);font-weight:800;letter-spacing:3px;
-    cursor:pointer;touch-action:manipulation;
+    cursor:pointer;
+
+    /* 关键：杜绝浏览器默认行为，消除点击延迟 */
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;user-select:none;
+
+    /* 关键：GPU 加速层 + 平滑过渡 */
+    will-change:transform;
+    transform:translateZ(0) scale(1);
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+
+    /* 只对合成属性做过渡，绝不动 top/left/margin 之类 */
+    transition:
+      transform .07s cubic-bezier(.2,.8,.3,1),
+      background .2s ease,
+      box-shadow .2s ease;
+
     box-shadow:0 16px 34px -14px rgba(91,124,255,.9),inset 0 -4px 0 rgba(0,0,0,.22);
-    transition:transform .06s ease,filter .2s ease,background .2s ease;
   }
   .click-btn.is-playing{
     background:linear-gradient(160deg,#ff5b7f,#ff8a3d 70%);
     box-shadow:0 16px 34px -14px rgba(255,107,107,.9),inset 0 -4px 0 rgba(0,0,0,.22);
     letter-spacing:6px;
   }
-  .click-btn:active{transform:scale(.975)}
-  .click-btn.pop{animation:pop .11s ease}
-  @keyframes pop{50%{transform:scale(.94)}}
-  .click-btn:disabled{filter:grayscale(.55) brightness(.75);cursor:not-allowed;box-shadow:none}
+  /* 按下：立即缩小，抬起自动弹回，全靠浏览器原生状态 */
+  .click-btn:not(:disabled):active{
+    transform:translateZ(0) scale(.955);
+    transition-duration:.03s;
+  }
+  .click-btn:disabled{
+    filter:grayscale(.55) brightness(.75);
+    cursor:not-allowed;box-shadow:none;
+  }
 
   .result{margin-top:14px;padding:16px;border-radius:16px;
     background:rgba(255,255,255,.04);border:1px solid var(--line);animation:fadeUp .25s ease}
@@ -166,7 +189,6 @@
   .lb-score{flex:none;min-width:40px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
   .empty{color:#7b81ad;font-size:14px;text-align:center;padding:28px 8px}
 
-  /* ========== 升级面板 ========== */
   .upgrade-panel .points-hint{
     text-align:center;
     font-size:12px;color:var(--muted);
@@ -227,7 +249,6 @@
 
   .footer{text-align:center;color:#5f648c;font-size:12px;margin-top:22px}
 
-  /* ========== 弹窗 ========== */
   .modal{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
   .modal.hidden{display:none}
   .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,15,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -366,9 +387,6 @@
 (function () {
   'use strict';
 
-  /* ============================================================
-   *  配置
-   * ============================================================ */
   const CONFIG = {
     DURATION: 10000,
     TARGET: 50,
@@ -381,7 +399,6 @@
     EMAIL_DOMAIN: '@clicks.game'
   };
 
-  // 升级项定义
   const UPGRADES = [
     {
       key: 'time',
@@ -419,9 +436,6 @@
     return Math.floor(u.baseCost * Math.pow(u.growth, level));
   }
 
-  /* ============================================================
-   *  Supabase 初始化
-   * ============================================================ */
   let sb = null;
   try {
     if (window.supabase && window.supabase.createClient) {
@@ -431,9 +445,6 @@
     console.error('Supabase 初始化失败', e);
   }
 
-  /* ============================================================
-   *  DOM
-   * ============================================================ */
   const $ = id => document.getElementById(id);
   const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps'), barEl = $('bar');
   const clickBtn = $('clickBtn');
@@ -452,26 +463,20 @@
   const modalCloseBtn = authModal.querySelector('.modal-close');
   const tabBtns = authModal.querySelectorAll('.tab[data-tab]');
 
-  /* ============================================================
-   *  状态
-   * ============================================================ */
-  let phase = 'idle';       // idle | playing | finished
+  let phase = 'idle';
   let clicks = 0;
   let endAt = 0;
   let rafId = 0;
   let lastScore = 0;
   let lastEarnedPoints = 0;
-  let currentParams = null; // { duration, target, multiplier }
+  let currentParams = null;
   let currentUser = null;
-  let currentProfile = null; // { id, points, upgrades }
+  let currentProfile = null;
   let authMode = 'login';
   let submitting = false;
-  let authForced = true;    // 强制登录模式
-  let pendingSave = false;
+  let authForced = true;
 
-  /* ============================================================
-   *  工具
-   * ============================================================ */
+  /* ================= 工具 ================= */
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => (
       { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
@@ -501,9 +506,7 @@
     return { time: 0, target: 0, multiplier: 0 };
   }
 
-  /* ============================================================
-   *  游戏参数
-   * ============================================================ */
+  /* ================= 游戏参数 ================= */
   function computeParams() {
     const u = (currentProfile && currentProfile.upgrades) || defaultUpgrades();
     return {
@@ -526,9 +529,7 @@
     return (u.time || 0) + (u.target || 0) + (u.multiplier || 0);
   }
 
-  /* ============================================================
-   *  用户 / Profile
-   * ============================================================ */
+  /* ================= Profile ================= */
   async function loadProfile() {
     if (!sb || !currentUser) return null;
     const { data, error } = await sb
@@ -544,7 +545,6 @@
     if (!sb || !currentUser) return null;
     let p = await loadProfile();
     if (p) return p;
-    // 触发器没生效？手动补一条
     const { error } = await sb
       .from(CONFIG.PROFILES)
       .insert({ id: currentUser.id, points: 0, upgrades: defaultUpgrades() });
@@ -580,20 +580,34 @@
     }
   }
 
-  /* ============================================================
-   *  排行榜
-   * ============================================================ */
+  /* ================= 排行榜（每用户去重，保留最高分）================= */
   async function fetchScores() {
     if (!sb) throw new Error('云端不可用');
+
+    // 多取一些，给去重留余量（一个用户可能有好几条记录）
+    const fetchLimit = Math.max(CONFIG.SHOW * 10, 200);
+
     const { data, error } = await sb
       .from(CONFIG.TABLE)
       .select('id,user_id,name,score,cps,created_at')
       .order('score', { ascending: false })
       .order('created_at', { ascending: true })
-      .limit(CONFIG.SHOW);
+      .limit(fetchLimit);
 
     if (error) throw error;
-    return (data || []).map(r => ({
+
+    // 按 user_id 去重，因为已经按 score 降序，第一次出现的就是该用户最高分
+    const seen = new Set();
+    const deduped = [];
+    for (const r of (data || [])) {
+      const key = r.user_id || ('anon_' + r.id);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(r);
+      if (deduped.length >= CONFIG.SHOW) break;
+    }
+
+    return deduped.map(r => ({
       id: r.id,
       user_id: r.user_id,
       name: r.name,
@@ -646,9 +660,7 @@
     }
   }
 
-  /* ============================================================
-   *  升级面板
-   * ============================================================ */
+  /* ================= 升级面板 ================= */
   function renderUpgradeList() {
     const pts = (currentProfile && currentProfile.points) || 0;
     const lvObj = (currentProfile && currentProfile.upgrades) || defaultUpgrades();
@@ -705,7 +717,6 @@
     const cost = upgradeCost(u, level);
     if (currentProfile.points < cost) return;
 
-    // 按钮 loading
     const btn = upgradeList.querySelector('[data-buy="' + key + '"]');
     if (btn) { btn.disabled = true; btn.textContent = '购买中…'; }
 
@@ -737,7 +748,6 @@
       return;
     }
 
-    // 更新本地 profile
     const newUpg = Object.assign({}, currentProfile.upgrades || defaultUpgrades());
     newUpg[key] = res.level;
     setProfile({
@@ -746,7 +756,6 @@
       upgrades: newUpg
     });
 
-    // 参数变了，刷新顶部提示
     refreshConfigLabels();
   }
 
@@ -756,9 +765,7 @@
     purchaseUpgrade(btn.dataset.buy);
   });
 
-  /* ============================================================
-   *  游戏逻辑
-   * ============================================================ */
+  /* ================= 游戏逻辑 ================= */
   function resetHud() {
     const p = computeParams();
     timerEl.textContent = (p.duration / 1000).toFixed(2);
@@ -770,15 +777,12 @@
   function startGame() {
     if (!currentUser) { openAuthModal('login', true); return; }
     if (!sb) return;
-
-    // 必须登录且已加载 profile
     if (!currentProfile) {
       alert('正在加载你的数据，请稍候…');
       return;
     }
 
     currentParams = computeParams();
-
     clicks = 0;
     lastEarnedPoints = 0;
     resultEl.classList.add('hidden');
@@ -788,7 +792,6 @@
     clickBtn.disabled = false;
     clickBtn.textContent = '点！';
     clickBtn.classList.add('is-playing');
-    clickBtn.classList.remove('pop');
 
     phase = 'playing';
     const now = performance.now();
@@ -811,16 +814,13 @@
     rafId = requestAnimationFrame(tick);
   }
 
+  // 关键：只更新数据，不触发任何强制重排
   function registerClick() {
     if (phase !== 'playing') return;
     clicks++;
     countEl.textContent = clicks;
-
-    clickBtn.classList.remove('pop');
-    void clickBtn.offsetWidth;
-    clickBtn.classList.add('pop');
-
-    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+    // 触觉反馈（可选，短促）
+    if (navigator.vibrate) { try { navigator.vibrate(6); } catch (e) {} }
   }
 
   function endGame() {
@@ -829,7 +829,7 @@
     phase = 'finished';
 
     clickBtn.disabled = true;
-    clickBtn.classList.remove('is-playing', 'pop');
+    clickBtn.classList.remove('is-playing');
     clickBtn.textContent = '挑战结束';
 
     lastScore = clicks;
@@ -837,7 +837,6 @@
     const cps = lastScore / (p.duration / 1000);
     const win = lastScore >= p.target;
 
-    // 计算点数
     const raw = Math.floor(lastScore / 10);
     const earned = Math.max(1, Math.floor(raw * p.multiplier));
     lastEarnedPoints = earned;
@@ -857,9 +856,7 @@
     saveBtn.textContent = '上传成绩 · 获得 ' + earned + ' 💎';
   }
 
-  /* ============================================================
-   *  上传成绩（RPC：插入分数 + 加点数）
-   * ============================================================ */
+  /* ================= 上传成绩 ================= */
   async function handleSave() {
     if (!currentUser) { openAuthModal('login', true); return; }
     if (!sb) return;
@@ -892,7 +889,6 @@
       return;
     }
 
-    // 更新本地点数
     if (typeof res.points === 'number') {
       setProfile({
         id: currentProfile.id,
@@ -902,13 +898,10 @@
     }
 
     saveBtn.textContent = '已上传 ✓ +' + lastEarnedPoints + ' 💎';
-
     await refreshLeaderboard();
   }
 
-  /* ============================================================
-   *  弹窗（强制登录）
-   * ============================================================ */
+  /* ================= 弹窗 ================= */
   function openAuthModal(mode, forced) {
     if (!sb) return;
     authForced = !!forced;
@@ -921,7 +914,7 @@
   }
 
   function closeAuthModal() {
-    if (authForced && !currentUser) return; // 强制模式下不允许关闭
+    if (authForced && !currentUser) return;
     authModal.classList.add('hidden');
     hideAuthMessages();
   }
@@ -1017,12 +1010,10 @@
     await sb.auth.signOut();
   }
 
-  /* ============================================================
-   *  事件绑定
-   * ============================================================ */
+  /* ================= 事件绑定 ================= */
+  // 关键：只在 pointerdown 计数，不 preventDefault（保留原生 :active）
   clickBtn.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    e.preventDefault();
 
     if (!currentUser) { openAuthModal('login', true); return; }
 
@@ -1035,7 +1026,6 @@
     if (e.repeat) return;
     if (authModal && !authModal.classList.contains('hidden')) return;
     if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
-
     if (!currentUser) return;
 
     e.preventDefault();
@@ -1056,14 +1046,12 @@
     btn.addEventListener('click', () => setAuthMode(btn.dataset.tab));
   });
 
-  // backdrop 点击：非强制模式下关闭
   authModal.addEventListener('click', function (e) {
     if (!e.target.closest('[data-close]')) return;
     if (authForced && !currentUser) return;
     closeAuthModal();
   });
 
-  // Escape：非强制模式下关闭
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     if (authModal.classList.contains('hidden')) return;
@@ -1071,17 +1059,13 @@
     closeAuthModal();
   });
 
-  /* ============================================================
-   *  认证状态变化
-   * ============================================================ */
+  /* ================= 认证状态 ================= */
   async function onSignedIn(session) {
     currentUser = session.user;
     renderUserBar();
 
-    // 加载 / 创建 profile
     let p = await ensureProfile();
     if (!p) {
-      // 兜底一个本地对象，避免游戏崩溃
       p = { id: currentUser.id, points: 0, upgrades: defaultUpgrades() };
     }
     setProfile(p);
@@ -1099,14 +1083,10 @@
     renderUpgradeList();
     refreshConfigLabels();
     refreshLeaderboard();
-
-    // 强制登录：立刻弹窗
     openAuthModal('login', true);
   }
 
-  /* ============================================================
-   *  初始化
-   * ============================================================ */
+  /* ================= 初始化 ================= */
   async function init() {
     resetHud();
     renderUserBar();
@@ -1120,7 +1100,6 @@
       return;
     }
 
-    // 监听 auth
     sb.auth.onAuthStateChange(function (event, session) {
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
         if (session) onSignedIn(session);
@@ -1132,13 +1111,11 @@
       authSubmit.disabled = false;
     });
 
-    // 恢复会话
     try {
       const { data } = await sb.auth.getSession();
       if (data && data.session) {
         await onSignedIn(data.session);
       } else {
-        // 未登录 → 强制弹窗
         openAuthModal('login', true);
         refreshLeaderboard();
       }
