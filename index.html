@@ -115,7 +115,6 @@
     100%{transform:scale(1)}
   }
 
-  /* ===== 大按钮：仅缩放/位移动效 ===== */
   .click-btn{
     display:block;width:100%;
     height:clamp(220px,40vh,320px);
@@ -198,8 +197,6 @@
 
   .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
     background:rgba(255,255,255,.08);color:#a8b0dd}
-  .badge.cloud{background:rgba(51,209,122,.16);color:#5fe0a0}
-  .badge.warn{background:rgba(255,150,60,.16);color:#ffb066}
   .badge.gold{background:rgba(255,204,102,.16);color:var(--gold)}
 
   .upgrade-item{
@@ -208,8 +205,10 @@
     border:1px solid rgba(255,255,255,.06);
     border-radius:14px;
     padding:14px;
+    margin-bottom:10px;
     transition:border-color .25s,background .25s;
   }
+  .upgrade-item:last-child{margin-bottom:0}
   .upgrade-item.is-max{
     background:linear-gradient(135deg,rgba(255,204,102,.1),rgba(255,204,102,.02));
     border-color:rgba(255,204,102,.32);
@@ -248,7 +247,7 @@
     display:block;font-size:12px;color:#9db4ff;margin-top:5px;font-weight:600;
   }
 
-  .upgrade-lv{display:flex;gap:4px;flex:none;margin-top:6px}
+  .upgrade-lv{display:flex;gap:4px;flex:none;margin-top:6px;align-items:center}
   .upgrade-lv i{
     display:block;width:8px;height:8px;border-radius:50%;
     background:rgba(255,255,255,.14);
@@ -263,6 +262,14 @@
     0%{transform:scale(.3)}
     60%{transform:scale(1.5)}
     100%{transform:scale(1)}
+  }
+  .upgrade-level-text{
+    font-size:11px;font-weight:700;
+    color:var(--gold);
+    padding:3px 9px;
+    background:rgba(255,204,102,.12);
+    border-radius:99px;
+    white-space:nowrap;
   }
 
   .upgrade-foot{display:flex;align-items:center;gap:8px}
@@ -287,7 +294,6 @@
   .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700}
   .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
 
-  /* ===== 排行榜浮动按钮 ===== */
   .lb-fab{
     position:fixed;
     right:20px;bottom:20px;
@@ -315,7 +321,6 @@
     transition-duration:.08s;
   }
 
-  /* ===== 弹窗 ===== */
   .modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
   .modal.hidden{display:none}
   .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,15,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -362,7 +367,6 @@
   .auth-info.hidden{display:none}
   .auth-tip{margin:12px 0 0;font-size:12px;color:#6d739e;text-align:center;line-height:1.6}
 
-  /* ===== 排行榜列表 ===== */
   .lb-list{
     display:flex;flex-direction:column;gap:6px;
     max-height:60vh;overflow-y:auto;
@@ -441,16 +445,14 @@
 
   <section class="panel">
     <h2 style="font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
-      ⚡ 升级 <span class="badge gold" id="upgradeBadge" style="margin-left:auto;">0 / 5</span>
+      ⚡ 升级 <span class="badge gold" id="upgradeBadge" style="margin-left:auto;">0 级</span>
     </h2>
     <div id="upgradeList"></div>
   </section>
 </div>
 
-<!-- 排行榜浮动按钮 -->
 <button id="lbFab" class="lb-fab" type="button" title="排行榜" aria-label="排行榜">🏆</button>
 
-<!-- 排行榜弹窗 -->
 <div id="lbModal" class="modal hidden">
   <div class="modal-backdrop" data-close-lb></div>
   <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
@@ -460,7 +462,6 @@
   </div>
 </div>
 
-<!-- 登录弹窗 -->
 <div id="authModal" class="modal hidden">
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -509,21 +510,61 @@
     EMAIL_DOMAIN: '@clicks.game'
   };
 
+  /* ============================================================
+   *  升级定义
+   * ============================================================ */
+
+  // 速度等级 → 间隔（毫秒），索引 = 等级
   const AUTO_INTERVALS = [0, 2000, 1200, 800, 600, 400];
 
-  const AUTOCLICK = {
-    key: 'autoClick',
-    icon: '🤖',
-    name: '自动点击',
-    desc: '自动帮你点击',
-    maxLevel: 5,
-    baseCost: 5,
-    growth: 4
-  };
-
-  function autoclickCost(level) {
-    return AUTOCLICK.baseCost * Math.pow(AUTOCLICK.growth, level);
+  // 速度价格：5, 20, 80, 320, 1280
+  function speedCost(level) {
+    return 5 * Math.pow(4, level);
   }
+
+  // 倍率价格：
+  //   基础 100
+  //   <5 级：每次 ×1.5
+  //   5-14 级：每次 ×2
+  //   15-49 级：每次 ×2.4
+  //   50-99 级：每次 ×1.2
+  //   100 级满级
+  function multiplierCost(level) {
+    if (level >= 100) return Infinity;
+    let cost = 100;
+    for (let i = 0; i < level; i++) {
+      if (i < 5) cost *= 1.5;
+      else if (i < 15) cost *= 2;
+      else if (i < 50) cost *= 2.4;
+      else cost *= 1.2;
+    }
+    return Math.floor(cost);
+  }
+
+  const UPGRADES = [
+    {
+      key: 'autoClick',
+      icon: '🤖',
+      name: '自动点击[速度]',
+      desc: '自动帮你点击按钮',
+      maxLevel: 5,
+      cost: speedCost,
+      effectText: (lv) => lv === 0
+        ? '尚未解锁'
+        : '每 ' + (AUTO_INTERVALS[lv] / 1000).toFixed(1) + ' 秒自动点击一次'
+    },
+    {
+      key: 'autoMultiplier',
+      icon: '💥',
+      name: '自动点击[倍率]',
+      desc: '每次自动点击附加额外点击',
+      maxLevel: 100,
+      cost: multiplierCost,
+      effectText: (lv) => lv === 0
+        ? '尚未解锁'
+        : '每次自动点击 ×' + (1 + lv)
+    }
+  ];
 
   let sb = null;
   try {
@@ -584,6 +625,17 @@
     return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
 
+  function formatPrice(n) {
+    if (!isFinite(n)) return '∞';
+    if (n < 1000) return String(Math.floor(n));
+    if (n < 1e6) return (n / 1000).toFixed(1) + 'K';
+    if (n < 1e9) return (n / 1e6).toFixed(1) + 'M';
+    if (n < 1e12) return (n / 1e9).toFixed(1) + 'B';
+    if (n < 1e15) return (n / 1e12).toFixed(1) + 'T';
+    if (n < 1e18) return (n / 1e15).toFixed(1) + 'Q';
+    return n.toExponential(1);
+  }
+
   function usernameOf(u) {
     if (!u) return '';
     const meta = u.user_metadata || {};
@@ -604,17 +656,29 @@
   }
 
   function defaultUpgrades() {
-    return { autoClick: 0 };
+    return { autoClick: 0, autoMultiplier: 0 };
+  }
+
+  function getUpgradeLevel(key) {
+    if (!currentProfile || !currentProfile.upgrades) return 0;
+    return Number(currentProfile.upgrades[key]) || 0;
   }
 
   function currentAutoLevel() {
-    if (!currentProfile || !currentProfile.upgrades) return 0;
-    return Number(currentProfile.upgrades.autoClick) || 0;
+    return getUpgradeLevel('autoClick');
+  }
+
+  function currentMultiplierLevel() {
+    return getUpgradeLevel('autoMultiplier');
   }
 
   function currentPoints() {
     if (!currentProfile) return 0;
     return Number(currentProfile.points) || 0;
+  }
+
+  function totalUpgradeLevel() {
+    return currentAutoLevel() + currentMultiplierLevel();
   }
 
   /* ================= 背景粒子 ================= */
@@ -637,11 +701,11 @@
   }
 
   /* ================= 动效 ================= */
-  function floatPoint() {
+  function floatPoint(n) {
     const rect = clickBtn.getBoundingClientRect();
     const el = document.createElement('div');
     el.className = 'float-point';
-    el.textContent = '+1 💎';
+    el.textContent = '+' + n + ' 💎';
     el.style.left = (rect.left + rect.width / 2) + 'px';
     el.style.top = (rect.top + rect.height / 2) + 'px';
     document.body.appendChild(el);
@@ -672,8 +736,9 @@
     data.total_clicks = Number(data.total_clicks) || 0;
     if (!data.upgrades || typeof data.upgrades !== 'object') {
       data.upgrades = defaultUpgrades();
-    } else if (data.upgrades.autoClick === undefined) {
-      data.upgrades.autoClick = 0;
+    } else {
+      if (data.upgrades.autoClick === undefined) data.upgrades.autoClick = 0;
+      if (data.upgrades.autoMultiplier === undefined) data.upgrades.autoMultiplier = 0;
     }
     return data;
   }
@@ -683,8 +748,13 @@
     let p = await loadProfile();
 
     if (p) {
-      if (!p.upgrades || p.upgrades.autoClick === undefined) {
-        const cleaned = Object.assign({}, p.upgrades || {}, { autoClick: 0 });
+      // 补全可能缺失的 upgrades 字段
+      const upg = p.upgrades || {};
+      if (upg.autoClick === undefined || upg.autoMultiplier === undefined) {
+        const cleaned = Object.assign({}, upg, {
+          autoClick: Number(upg.autoClick) || 0,
+          autoMultiplier: Number(upg.autoMultiplier) || 0
+        });
         const { error } = await sb.from('profiles')
           .update({ upgrades: cleaned })
           .eq('id', currentUser.id);
@@ -771,22 +841,32 @@
     if (!currentUser || !currentProfile) return;
 
     const prev = currentProfile.total_clicks || 0;
-    const next = prev + 1;
+
+    // 手动：+1 点击
+    // 自动：+ (1 + 倍率等级) 点击
+    let addClicks = 1;
+    if (auto) {
+      addClicks = 1 + currentMultiplierLevel();
+    }
+
+    const next = prev + addClicks;
 
     currentProfile.total_clicks = next;
-    sessionClicks++;
-    pendingClicks++;
+    sessionClicks += addClicks;
+    pendingClicks += addClicks;
 
     countEl.textContent = next;
     bumpValue(countEl);
 
-    const crossed = Math.floor(next / CONFIG.POINT_PER_CLICKS) >
-                    Math.floor(prev / CONFIG.POINT_PER_CLICKS);
+    // 计算跨过了多少个 10 的阈值
+    const oldTier = Math.floor(prev / CONFIG.POINT_PER_CLICKS);
+    const newTier = Math.floor(next / CONFIG.POINT_PER_CLICKS);
+    const gained = newTier - oldTier;
 
-    if (crossed) {
-      currentProfile.points = currentPoints() + 1;
+    if (gained > 0) {
+      currentProfile.points = currentPoints() + gained;
       pointsVal.textContent = currentProfile.points;
-      floatPoint();
+      floatPoint(gained);
       renderUpgradeList();
     }
 
@@ -888,50 +968,56 @@
   /* ================= 升级面板 ================= */
   function renderUpgradeList() {
     const pts = currentPoints();
-    const level = currentAutoLevel();
-    const max = AUTOCLICK.maxLevel;
-    const isMax = level >= max;
-    const cost = isMax ? 0 : autoclickCost(level);
-    const canBuy = !isMax && pts >= cost;
-    const poor = !isMax && pts < cost;
+    const upgObj = (currentProfile && currentProfile.upgrades) || defaultUpgrades();
 
-    upgradeBadge.textContent = level + ' / ' + max;
+    upgradeBadge.textContent = totalUpgradeLevel() + ' 级';
 
-    const effectText = level === 0
-      ? '尚未解锁'
-      : '每 ' + (AUTO_INTERVALS[level] / 1000).toFixed(1) + ' 秒自动点击一次';
+    upgradeList.innerHTML = UPGRADES.map(u => {
+      const level = Number(upgObj[u.key]) || 0;
+      const isMax = level >= u.maxLevel;
+      const cost = isMax ? 0 : u.cost(level);
+      const canBuy = !isMax && pts >= cost;
+      const poor = !isMax && pts < cost;
 
-    const dots = Array.from({ length: max }, (_, i) =>
-      '<i class="' + (i < level ? 'on' : '') + '"></i>'
-    ).join('');
+      const effectText = u.effectText(level);
 
-    let btnHtml;
-    if (isMax) {
-      btnHtml = '<button class="btn ghost" disabled>已满级</button>';
-    } else if (canBuy) {
-      btnHtml = '<button class="btn gold" data-buy="' + AUTOCLICK.key + '">升级</button>';
-    } else {
-      btnHtml = '<button class="btn ghost" disabled>点数不足</button>';
-    }
+      // 等级显示：小等级用点，大等级用数字
+      let lvHtml;
+      if (u.maxLevel <= 10) {
+        lvHtml = Array.from({ length: u.maxLevel }, (_, i) =>
+          '<i class="' + (i < level ? 'on' : '') + '"></i>'
+        ).join('');
+      } else {
+        lvHtml = '<span class="upgrade-level-text">' + level + ' / ' + u.maxLevel + '</span>';
+      }
 
-    upgradeList.innerHTML =
-      '<div class="upgrade-item' + (isMax ? ' is-max' : (canBuy ? ' can-buy' : '')) + '" data-key="' + AUTOCLICK.key + '">'
-      + '<div class="upgrade-head">'
-      +   '<div class="upgrade-icon">' + AUTOCLICK.icon + '</div>'
-      +   '<div class="upgrade-info">'
-      +     '<h4>' + escapeHtml(AUTOCLICK.name) + '</h4>'
-      +     '<p>' + escapeHtml(AUTOCLICK.desc) + '</p>'
-      +     '<span class="upgrade-effect">' + escapeHtml(effectText) + '</span>'
-      +   '</div>'
-      +   '<div class="upgrade-lv">' + dots + '</div>'
-      + '</div>'
-      + '<div class="upgrade-foot">'
-      +   '<span class="upgrade-price' + (poor ? ' poor' : '') + '">'
-      +     (isMax ? '—' : '💎 ' + cost)
-      +   '</span>'
-      +   btnHtml
-      + '</div>'
-      + '</div>';
+      let btnHtml;
+      if (isMax) {
+        btnHtml = '<button class="btn ghost" disabled>已满级</button>';
+      } else if (canBuy) {
+        btnHtml = '<button class="btn gold" data-buy="' + u.key + '">升级</button>';
+      } else {
+        btnHtml = '<button class="btn ghost" disabled>点数不足</button>';
+      }
+
+      return '<div class="upgrade-item' + (isMax ? ' is-max' : (canBuy ? ' can-buy' : '')) + '" data-key="' + u.key + '">'
+        + '<div class="upgrade-head">'
+        +   '<div class="upgrade-icon">' + u.icon + '</div>'
+        +   '<div class="upgrade-info">'
+        +     '<h4>' + escapeHtml(u.name) + '</h4>'
+        +     '<p>' + escapeHtml(u.desc) + '</p>'
+        +     '<span class="upgrade-effect">' + escapeHtml(effectText) + '</span>'
+        +   '</div>'
+        +   '<div class="upgrade-lv">' + lvHtml + '</div>'
+        + '</div>'
+        + '<div class="upgrade-foot">'
+        +   '<span class="upgrade-price' + (poor ? ' poor' : '') + '">'
+        +     (isMax ? '—' : '💎 ' + formatPrice(cost))
+        +   '</span>'
+        +   btnHtml
+        + '</div>'
+        + '</div>';
+    }).join('');
   }
 
   async function purchaseUpgrade(key) {
@@ -939,17 +1025,19 @@
       alert('请先登录');
       return;
     }
-    if (key !== AUTOCLICK.key) return;
 
-    const level = currentAutoLevel();
-    if (level >= AUTOCLICK.maxLevel) {
+    const u = UPGRADES.find(x => x.key === key);
+    if (!u) return;
+
+    const level = getUpgradeLevel(key);
+    if (level >= u.maxLevel) {
       alert('已经满级啦');
       return;
     }
 
-    const cost = autoclickCost(level);
+    const cost = u.cost(level);
     if (currentPoints() < cost) {
-      alert('点数不足，需要 ' + cost + ' 点');
+      alert('点数不足，需要 ' + formatPrice(cost) + ' 点');
       return;
     }
 
@@ -960,7 +1048,7 @@
     const { data, error } = await sb.rpc('purchase_upgrade', {
       p_key: key,
       p_cost: cost,
-      p_max: AUTOCLICK.maxLevel
+      p_max: u.maxLevel
     });
 
     if (error) {
@@ -1001,7 +1089,10 @@
       setTimeout(() => newItem.classList.remove('flash'), 850);
     }
 
-    startAutoClick();
+    // 速度升级后，重启自动点击计时器以应用新间隔
+    if (key === 'autoClick') {
+      startAutoClick();
+    }
   }
 
   upgradeList.addEventListener('click', function (e) {
@@ -1130,7 +1221,6 @@
   });
 
   document.addEventListener('keydown', function (e) {
-    // Escape 关闭排行榜弹窗
     if (e.key === 'Escape') {
       if (!lbModal.classList.contains('hidden')) { closeLbModal(); return; }
       if (!authModal.classList.contains('hidden')) {
