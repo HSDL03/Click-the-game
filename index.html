@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0c1a">
+<meta name="description" content="限时点击挑战小游戏，注册后可上传成绩到云端排行榜">
+<title>⚡ 疯狂点击 · 限时挑战</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<style>
+  :root{
+    --bg:#0b0c1a;
+    --panel-a:#181b38;
+    --panel-b:#14162c;
+    --text:#eef0ff;
+    --muted:#8f95c4;
+    --line:rgba(255,255,255,.07);
+    --accent:#4f6dff;
+    --accent2:#8b5bff;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;min-height:100vh;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    background-image:radial-gradient(900px 520px at 50% -10%,#2a2f6b 0%,transparent 65%);
+    background-attachment:fixed;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;user-select:none;
+    padding:20px 16px 44px;
+    display:flex;justify-content:center;
+  }
+  input{-webkit-user-select:text;user-select:text}
+  .wrap{width:100%;max-width:920px}
+
+  header{text-align:center;margin-bottom:14px}
+  h1{font-size:clamp(22px,5vw,30px);margin:0 0 8px;letter-spacing:.5px}
+  .sub{margin:0;color:var(--muted);font-size:14px}
+  .sub b{color:#9db4ff}
+
+  .user-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px 14px;
+    margin-bottom:16px;
+    font-size:14px;
+    min-height:46px;
+  }
+  .user-bar .uname{color:#9db4ff;font-weight:700}
+  .btn.small{padding:8px 14px;font-size:13px;border-radius:10px}
+
+  .grid{display:grid;gap:16px;grid-template-columns:1fr}
+  @media(min-width:860px){.grid{grid-template-columns:1.05fr .95fr;align-items:start}}
+
+  .panel{
+    background:linear-gradient(180deg,var(--panel-a),var(--panel-b));
+    border:1px solid var(--line);
+    border-radius:20px;padding:16px;
+    box-shadow:0 18px 40px -22px rgba(0,0,0,.9);
+  }
+
+  .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .hud-item{background:rgba(255,255,255,.04);border-radius:12px;padding:9px 6px;text-align:center}
+  .hud-item .label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;letter-spacing:.5px}
+  .hud-item .val{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  .progress{height:8px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.07);margin-bottom:14px}
+  .progress > i{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .08s linear}
+
+  .click-btn{
+    display:block;width:100%;
+    height:clamp(200px,36vh,300px);
+    border:0;border-radius:22px;
+    background:linear-gradient(160deg,var(--accent),var(--accent2) 70%);
+    color:#fff;font-family:inherit;
+    font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:3px;
+    cursor:pointer;touch-action:manipulation;
+    box-shadow:0 16px 34px -14px rgba(91,124,255,.9),inset 0 -4px 0 rgba(0,0,0,.22);
+    transition:transform .06s ease,filter .2s ease,background .2s ease;
+  }
+  .click-btn.is-playing{
+    background:linear-gradient(160deg,#ff5b7f,#ff8a3d 70%);
+    box-shadow:0 16px 34px -14px rgba(255,107,107,.9),inset 0 -4px 0 rgba(0,0,0,.22);
+    letter-spacing:6px;
+  }
+  .click-btn:active{transform:scale(.975)}
+  .click-btn.pop{animation:pop .11s ease}
+  @keyframes pop{50%{transform:scale(.94)}}
+  .click-btn:disabled{filter:grayscale(.55) brightness(.75);cursor:not-allowed;box-shadow:none}
+
+  .result{margin-top:14px;padding:16px;border-radius:16px;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);animation:fadeUp .25s ease}
+  .result.hidden{display:none}
+  .result.win{border-color:rgba(51,209,122,.45);background:rgba(51,209,122,.09)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .result-score{font-size:46px;font-weight:800;text-align:center;line-height:1;
+    font-variant-numeric:tabular-nums;
+    background:linear-gradient(180deg,#fff,#9db4ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .result-score small{font-size:16px;font-weight:600;margin-left:4px;color:var(--muted);-webkit-text-fill-color:var(--muted)}
+  .result-msg{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 14px}
+
+  .btn{
+    border:0;border-radius:12px;padding:11px 16px;
+    font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
+    transition:transform .06s,filter .15s,background .15s;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:linear-gradient(160deg,var(--accent),var(--accent2));color:#fff}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.ghost{background:rgba(255,255,255,.07);color:var(--text)}
+  .btn.ghost:hover{background:rgba(255,255,255,.11)}
+  .btn.block{width:100%}
+  .btn:disabled{opacity:.65;cursor:default;transform:none;filter:none}
+  .stack{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+
+  .panel h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .badge{margin-left:auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+    background:rgba(255,255,255,.08);color:#a8b0dd}
+  .badge.cloud{background:rgba(51,209,122,.16);color:#5fe0a0}
+  .badge.warn{background:rgba(255,150,60,.16);color:#ffb066}
+
+  #leaderboard{display:flex;flex-direction:column;gap:6px;max-height:430px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+  #leaderboard::-webkit-scrollbar{width:6px}
+  #leaderboard::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
+
+  .lb-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;
+    background:rgba(255,255,255,.035);font-size:14px;transition:background .2s}
+  .lb-row.is-me{background:rgba(91,140,255,.14);box-shadow:inset 0 0 0 1px rgba(91,140,255,.4)}
+  .lb-rank{width:26px;flex:none;text-align:center;font-weight:700;color:var(--muted)}
+  .lb-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb-name em{font-style:normal;font-size:10px;font-weight:700;background:var(--accent);color:#fff;
+    padding:1px 5px;border-radius:99px;margin-left:6px;vertical-align:middle}
+  .lb-meta{flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .lb-score{flex:none;min-width:40px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  .empty{color:#7b81ad;font-size:14px;text-align:center;padding:28px 8px}
+
+  .footer{text-align:center;color:#5f648c;font-size:12px;margin-top:22px}
+
+  .modal{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+  .modal.hidden{display:none}
+  .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,15,.72);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .modal-panel{
+    position:relative;z-index:1;width:100%;max-width:380px;
+    background:linear-gradient(180deg,#1c1f3d,#16182f);
+    border:1px solid var(--line);border-radius:20px;padding:22px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.9);
+    animation:fadeUp .2s ease;
+  }
+  .modal-close{position:absolute;top:8px;right:8px;background:transparent;border:0;color:var(--muted);
+    font-size:24px;width:34px;height:34px;cursor:pointer;border-radius:9px;line-height:1;font-family:inherit}
+  .modal-close:hover{background:rgba(255,255,255,.06);color:#fff}
+  .modal-title{font-size:17px;font-weight:700;margin:0 0 14px;text-align:center}
+
+  .tabs{display:flex;gap:5px;margin-bottom:16px;background:rgba(0,0,0,.28);padding:4px;border-radius:12px}
+  .tab{flex:1;padding:9px;border:0;border-radius:9px;background:transparent;color:var(--muted);
+    font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s}
+  .tab.active{background:linear-gradient(160deg,var(--accent),var(--accent2));color:#fff}
+
+  #authForm label{display:block;margin-bottom:12px}
+  #authForm label > span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  #authForm input{
+    width:100%;background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.12);border-radius:11px;
+    padding:11px 12px;color:var(--text);font-size:15px;font-family:inherit;outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  #authForm input::placeholder{color:#5e6390}
+  #authForm input:focus{border-color:#5b8cff;box-shadow:0 0 0 3px rgba(91,140,255,.18)}
+  #authSubmit{width:100%;margin-top:2px}
+
+  .auth-error{background:rgba(255,90,90,.12);border:1px solid rgba(255,90,90,.35);
+    color:#ff9a9a;border-radius:10px;padding:9px 11px;font-size:13px;margin-bottom:11px;word-break:break-word}
+  .auth-error.hidden{display:none}
+  .auth-info{background:rgba(51,209,122,.12);border:1px solid rgba(51,209,122,.35);
+    color:#7be2a8;border-radius:10px;padding:9px 11px;font-size:13px;margin-bottom:11px}
+  .auth-info.hidden{display:none}
+  .auth-tip{margin:12px 0 0;font-size:12px;color:#6d739e;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⚡ 疯狂点击</h1>
+    <p class="sub">在 <b id="durLabel">10</b> 秒内点击尽可能多次 · 目标 <b id="targetLabel">50</b> 次</p>
+  </header>
+
+  <div class="user-bar">
+    <span id="userText">未登录 · 可先试玩</span>
+    <button id="userAction" class="btn ghost small" type="button">登录 / 注册</button>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="hud">
+        <div class="hud-item"><span class="label">剩余时间</span><span class="val" id="timer">10.00</span></div>
+        <div class="hud-item"><span class="label">点击次数</span><span class="val" id="count">0</span></div>
+        <div class="hud-item"><span class="label">每秒点击</span><span class="val" id="cps">0.0</span></div>
+      </div>
+
+      <div class="progress"><i id="bar"></i></div>
+
+      <button id="clickBtn" class="click-btn" type="button">开始挑战</button>
+
+      <div id="result" class="result hidden">
+        <div class="result-score"><span id="resultScore">0</span><small>次</small></div>
+        <p class="result-msg" id="resultMsg"></p>
+        <div class="stack">
+          <button id="saveBtn" class="btn primary block" type="button">上传成绩</button>
+          <button id="againBtn" class="btn ghost block" type="button">再来一次</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>🏆 排行榜 <span class="badge" id="lbBadge">加载中…</span></h2>
+      <div id="leaderboard"><div class="empty">加载中…</div></div>
+    </section>
+  </div>
+
+  <p class="footer">纯前端小游戏 · 托管于 GitHub Pages</p>
+</div>
+
+<div id="authModal" class="modal hidden">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" type="button" data-close aria-label="关闭">×</button>
+    <h3 class="modal-title" id="modalTitle">登录</h3>
+
+    <div class="tabs">
+      <button class="tab active" type="button" data-tab="login">登录</button>
+      <button class="tab" type="button" data-tab="register">注册</button>
+    </div>
+
+    <div id="authError" class="auth-error hidden"></div>
+    <div id="authInfo" class="auth-info hidden"></div>
+
+    <form id="authForm" novalidate>
+      <label>
+        <span>用户名</span>
+        <input id="authUsername" type="text" autocomplete="username"
+               placeholder="3-16 位字母、数字或下划线"
+               minlength="3" maxlength="16" required>
+      </label>
+      <label>
+        <span>密码</span>
+        <input id="authPassword" type="password" autocomplete="current-password"
+               placeholder="至少 6 位" minlength="6" maxlength="72" required>
+      </label>
+      <button type="submit" class="btn primary" id="authSubmit">登录</button>
+    </form>
+
+    <p class="auth-tip">注册仅需用户名 + 密码，无需邮箱<br>用户名不支持中文和空格</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function () {
+  'use strict';
+
+  const CONFIG = {
+    DURATION: 10000,
+    TARGET: 50,
+    SHOW: 20,
+
+    SUPABASE_URL: 'https://ideuctxwohmwdbdtjyuh.supabase.co',
+    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkZXVjdHh3b2htd2RiZHRqeXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MjE4MDUsImV4cCI6MjEwNTk5NzgwNX0.YPy9y6njWnU5J3ptf1rSKImAVfnAnUR1TbljOd2D-EE',
+    TABLE: 'scores',
+    EMAIL_DOMAIN: '@clicks.game'
+  };
+
+  let sb = null;
+  try {
+    if (window.supabase && window.supabase.createClient) {
+      sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+    }
+  } catch (e) {
+    console.error('Supabase 初始化失败', e);
+  }
+
+  const $ = id => document.getElementById(id);
+  const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps'), barEl = $('bar');
+  const clickBtn = $('clickBtn');
+  const resultEl = $('result'), resultScoreEl = $('resultScore'), resultMsgEl = $('resultMsg');
+  const saveBtn = $('saveBtn'), againBtn = $('againBtn');
+  const lbEl = $('leaderboard'), lbBadge = $('lbBadge');
+  const userText = $('userText'), userAction = $('userAction');
+  const authModal = $('authModal'), authForm = $('authForm');
+  const authUsername = $('authUsername'), authPassword = $('authPassword');
+  const authSubmit = $('authSubmit'), authError = $('authError'), authInfo = $('authInfo');
+  const modalTitle = $('modalTitle');
+  const tabBtns = authModal.querySelectorAll('.tab[data-tab]');
+
+  let phase = 'idle';
+  let clicks = 0;
+  let endAt = 0;
+  let rafId = 0;
+  let lastScore = 0;
+  let currentUser = null;
+  let authMode = 'login';
+  let submitting = false;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => (
+      { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
+    ));
+  }
+
+  function usernameOf(u) {
+    if (!u) return '';
+    const meta = u.user_metadata || {};
+    if (meta.username) return meta.username;
+    if (u.email) return u.email.split('@')[0];
+    return '玩家';
+  }
+
+  function usernameToEmail(name) {
+    return name.trim().toLowerCase() + CONFIG.EMAIL_DOMAIN;
+  }
+
+  function validateUsername(name) {
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) {
+      return '用户名需为 3-16 位字母、数字或下划线';
+    }
+    return '';
+  }
+
+  function renderUserBar() {
+    if (!sb) {
+      userText.textContent = '云端不可用 · 无法登录';
+      userAction.disabled = true;
+      userAction.textContent = '离线模式';
+      return;
+    }
+    if (currentUser) {
+      userText.innerHTML = '👤 <span class="uname">' + escapeHtml(usernameOf(currentUser)) + '</span>';
+      userAction.disabled = false;
+      userAction.textContent = '退出登录';
+      userAction.dataset.action = 'logout';
+    } else {
+      userText.textContent = '未登录 · 可先试玩，上传成绩需登录';
+      userAction.disabled = false;
+      userAction.textContent = '登录 / 注册';
+      userAction.dataset.action = 'login';
+    }
+  }
+
+  async function fetchScores() {
+    if (!sb) throw new Error('云端不可用');
+    const { data, error } = await sb
+      .from(CONFIG.TABLE)
+      .select('id,user_id,name,score,cps,created_at')
+      .order('score', { ascending: false })
+      .order('created_at', { ascending: true })
+      .limit(CONFIG.SHOW);
+
+    if (error) throw error;
+
+    return (data || []).map(r => ({
+      id: r.id,
+      user_id: r.user_id,
+      name: r.name,
+      score: Number(r.score) || 0,
+      cps: Number(r.cps) || 0,
+      time: Date.parse(r.created_at) || 0
+    }));
+  }
+
+  function renderLeaderboard(list) {
+    const arr = (list || []).slice(0, CONFIG.SHOW);
+    if (!arr.length) {
+      lbEl.innerHTML = '<div class="empty">还没有记录，快来抢占第一名！</div>';
+      return;
+    }
+    const medals = ['🥇','🥈','🥉'];
+    const myId = currentUser ? currentUser.id : null;
+
+    lbEl.innerHTML = arr.map((it, i) => {
+      const rank = i + 1;
+      const mark = rank <= 3 ? medals[rank - 1] : rank;
+      const isMe = myId && it.user_id === myId;
+      return '<div class="lb-row' + (isMe ? ' is-me' : '') + '">'
+        + '<span class="lb-rank">' + mark + '</span>'
+        + '<span class="lb-name">' + escapeHtml(it.name) + (isMe ? '<em>我</em>' : '') + '</span>'
+        + '<span class="lb-meta">' + it.cps.toFixed(1) + '/s</span>'
+        + '<span class="lb-score">' + it.score + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  async function refreshLeaderboard() {
+    if (!sb) {
+      lbBadge.textContent = '离线';
+      lbBadge.className = 'badge warn';
+      renderLeaderboard([]);
+      return;
+    }
+    try {
+      const rows = await fetchScores();
+      lbBadge.textContent = '云端';
+      lbBadge.className = 'badge cloud';
+      renderLeaderboard(rows);
+    } catch (err) {
+      console.warn(err);
+      lbBadge.textContent = '加载失败';
+      lbBadge.className = 'badge warn';
+      lbEl.innerHTML = '<div class="empty">排行榜加载失败，请稍后重试</div>';
+    }
+  }
+
+  function resetHud() {
+    timerEl.textContent = (CONFIG.DURATION / 1000).toFixed(2);
+    countEl.textContent = '0';
+    cpsEl.textContent = '0.0';
+    barEl.style.width = '0%';
+  }
+
+  function startGame() {
+    clicks = 0;
+    resultEl.classList.add('hidden');
+    resultEl.classList.remove('win');
+    resetHud();
+
+    clickBtn.disabled = false;
+    clickBtn.textContent = '点！';
+    clickBtn.classList.add('is-playing');
+    clickBtn.classList.remove('pop');
+
+    phase = 'playing';
+    const now = performance.now();
+    endAt = now + CONFIG.DURATION;
+
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function tick(now) {
+    if (phase !== 'playing') return;
+    const left = Math.max(0, endAt - now);
+    const elapsed = CONFIG.DURATION - left;
+
+    timerEl.textContent = (left / 1000).toFixed(2);
+    cpsEl.textContent = (clicks / Math.max(elapsed, 250) * 1000).toFixed(1);
+    barEl.style.width = Math.min(1, clicks / CONFIG.TARGET) * 100 + '%';
+
+    if (left <= 0) { endGame(); return; }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function registerClick() {
+    if (phase !== 'playing') return;
+    clicks++;
+    countEl.textContent = clicks;
+
+    clickBtn.classList.remove('pop');
+    void clickBtn.offsetWidth;
+    clickBtn.classList.add('pop');
+
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+  }
+
+  function endGame() {
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+    phase = 'finished';
+
+    clickBtn.disabled = true;
+    clickBtn.classList.remove('is-playing', 'pop');
+    clickBtn.textContent = '挑战结束';
+
+    lastScore = clicks;
+    const cps = lastScore / (CONFIG.DURATION / 1000);
+    const win = lastScore >= CONFIG.TARGET;
+
+    resultScoreEl.textContent = lastScore;
+    resultMsgEl.textContent = win
+      ? '🎉 目标达成！平均 ' + cps.toFixed(1) + ' 次/秒'
+      : '离目标还差 ' + (CONFIG.TARGET - lastScore) + ' 次 · 平均 ' + cps.toFixed(1) + ' 次/秒';
+
+    resultEl.classList.remove('hidden');
+    resultEl.classList.toggle('win', win);
+
+    renderSaveBtn();
+  }
+
+  function renderSaveBtn() {
+    if (!sb) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = '云端不可用';
+      return;
+    }
+    if (!currentUser) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '登录后上传成绩';
+      saveBtn.dataset.action = 'open-auth';
+      return;
+    }
+    saveBtn.disabled = false;
+    saveBtn.textContent = '上传成绩 · ' + usernameOf(currentUser);
+    saveBtn.dataset.action = 'save';
+  }
+
+  async function handleSave() {
+    if (!currentUser) { openAuthModal('login'); return; }
+    if (!sb) return;
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = '上传中…';
+
+    const payload = {
+      user_id: currentUser.id,
+      name: usernameOf(currentUser),
+      score: lastScore,
+      cps: Number((lastScore / (CONFIG.DURATION / 1000)).toFixed(2))
+    };
+
+    const { error } = await sb.from(CONFIG.TABLE).insert(payload);
+
+    if (error) {
+      console.warn(error);
+      saveBtn.disabled = false;
+      saveBtn.textContent = '上传失败，点此重试';
+      return;
+    }
+
+    saveBtn.textContent = '已上传 ✓';
+    await refreshLeaderboard();
+  }
+
+  function openAuthModal(mode) {
+    if (!sb) return;
+    setAuthMode(mode || 'login');
+    authModal.classList.remove('hidden');
+    hideAuthMessages();
+    authUsername.value = '';
+    authPassword.value = '';
+    setTimeout(() => authUsername.focus(), 40);
+  }
+
+  function closeAuthModal() {
+    authModal.classList.add('hidden');
+    hideAuthMessages();
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    tabBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === mode));
+    modalTitle.textContent = mode === 'register' ? '注册新账号' : '登录';
+    authSubmit.textContent = mode === 'register' ? '注册并登录' : '登录';
+    authPassword.setAttribute('autocomplete', mode === 'register' ? 'new-password' : 'current-password');
+    hideAuthMessages();
+  }
+
+  function showAuthError(msg) {
+    authError.textContent = msg;
+    authError.classList.remove('hidden');
+    authInfo.classList.add('hidden');
+  }
+
+  function showAuthInfo(msg) {
+    authInfo.textContent = msg;
+    authInfo.classList.remove('hidden');
+    authError.classList.add('hidden');
+  }
+
+  function hideAuthMessages() {
+    authError.classList.add('hidden');
+    authInfo.classList.add('hidden');
+  }
+
+  async function submitAuth(e) {
+    e.preventDefault();
+    if (submitting || !sb) return;
+
+    hideAuthMessages();
+
+    const username = authUsername.value.trim();
+    const password = authPassword.value;
+
+    const nameErr = validateUsername(username);
+    if (nameErr) { showAuthError(nameErr); authUsername.focus(); return; }
+    if (password.length < 6) { showAuthError('密码至少 6 位'); authPassword.focus(); return; }
+
+    submitting = true;
+    authSubmit.disabled = true;
+    authSubmit.textContent = authMode === 'register' ? '注册中…' : '登录中…';
+
+    try {
+      if (authMode === 'register') {
+        const { data, error } = await sb.auth.signUp({
+          email: usernameToEmail(username),
+          password: password,
+          options: { data: { username: username } }
+        });
+        if (error) throw error;
+
+        if (!data.session) {
+          showAuthInfo('注册成功，但当前项目开启了邮箱确认，无法直接登录。请到 Supabase 后台关闭「Confirm email」。');
+          submitting = false;
+          authSubmit.disabled = false;
+          authSubmit.textContent = '注册并登录';
+          return;
+        }
+      } else {
+        const { error } = await sb.auth.signInWithPassword({
+          email: usernameToEmail(username),
+          password: password
+        });
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.warn(err);
+      showAuthError(translateAuthError(err));
+      submitting = false;
+      authSubmit.disabled = false;
+      authSubmit.textContent = authMode === 'register' ? '注册并登录' : '登录';
+    }
+  }
+
+  function translateAuthError(err) {
+    const msg = (err && (err.message || err.error_description || err.msg)) || '操作失败';
+    if (/already registered|already exists|User already/i.test(msg)) {
+      return '该用户名已被注册，换一个试试';
+    }
+    if (/Invalid login credentials/i.test(msg)) {
+      return '用户名或密码错误';
+    }
+    if (/Password should be at least/i.test(msg)) {
+      return '密码太短，Supabase 要求至少 6 位';
+    }
+    if (/Email not confirmed/i.test(msg)) {
+      return '邮箱未确认。请到 Supabase 后台关闭「Confirm email」后再试。';
+    }
+    if (/rate limit|too many/i.test(msg)) {
+      return '操作太频繁，请稍后再试';
+    }
+    return msg;
+  }
+
+  async function handleLogout() {
+    if (!sb) return;
+    await sb.auth.signOut();
+  }
+
+  clickBtn.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    if (phase === 'playing') registerClick();
+    else if (phase === 'idle') startGame();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.code !== 'Space' && e.code !== 'Enter') return;
+    if (e.repeat) return;
+    if (authModal && !authModal.classList.contains('hidden')) return;
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+
+    e.preventDefault();
+    if (phase === 'playing') registerClick();
+    else if (phase === 'idle') startGame();
+  });
+
+  againBtn.addEventListener('click', startGame);
+
+  saveBtn.addEventListener('click', function () {
+    if (saveBtn.dataset.action === 'open-auth') openAuthModal('login');
+    else handleSave();
+  });
+
+  userAction.addEventListener('click', function () {
+    if (userAction.dataset.action === 'logout') handleLogout();
+    else openAuthModal('login');
+  });
+
+  authForm.addEventListener('submit', submitAuth);
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => setAuthMode(btn.dataset.tab));
+  });
+
+  authModal.addEventListener('click', function (e) {
+    if (e.target.closest('[data-close]')) closeAuthModal();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !authModal.classList.contains('hidden')) closeAuthModal();
+  });
+
+  async function init() {
+    document.getElementById('durLabel').textContent = CONFIG.DURATION / 1000;
+    document.getElementById('targetLabel').textContent = CONFIG.TARGET;
+
+    resetHud();
+    renderUserBar();
+
+    if (!sb) {
+      lbBadge.textContent = '离线';
+      lbBadge.className = 'badge warn';
+      lbEl.innerHTML = '<div class="empty">无法连接云端，请检查网络或配置</div>';
+      return;
+    }
+
+    sb.auth.onAuthStateChange(function (event, session) {
+      currentUser = session ? session.user : null;
+      renderUserBar();
+
+      if (event === 'SIGNED_IN') {
+        closeAuthModal();
+        submitting = false;
+        authSubmit.disabled = false;
+        refreshLeaderboard();
+        if (phase === 'finished') renderSaveBtn();
+      }
+      if (event === 'SIGNED_OUT') {
+        submitting = false;
+        authSubmit.disabled = false;
+        refreshLeaderboard();
+        if (phase === 'finished') renderSaveBtn();
+      }
+    });
+
+    try {
+      const { data } = await sb.auth.getSession();
+      currentUser = data && data.session ? data.session.user : null;
+      renderUserBar();
+    } catch (e) {
+      console.warn(e);
+    }
+
+    await refreshLeaderboard();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
