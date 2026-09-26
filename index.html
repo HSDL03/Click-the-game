@@ -9,30 +9,21 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <style>
   :root{
-    --bg:#0b0c1a;
-    --panel-a:#181b38;
-    --panel-b:#14162c;
-    --text:#eef0ff;
-    --muted:#8f95c4;
-    --line:rgba(255,255,255,.07);
-    --accent:#4f6dff;
-    --accent2:#8b5bff;
-    --gold:#ffcc66;
+    --bg:#0b0c1a;--panel-a:#181b38;--panel-b:#14162c;
+    --text:#eef0ff;--muted:#8f95c4;--line:rgba(255,255,255,.07);
+    --accent:#4f6dff;--accent2:#8b5bff;--gold:#ffcc66;
+    --danger:#ff5b5b;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{
     margin:0;min-height:100vh;
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-    color:var(--text);
-    background:var(--bg);
+    color:var(--text);background:var(--bg);
     background-image:radial-gradient(900px 520px at 50% -10%,#2a2f6b 0%,transparent 65%);
-    background-attachment:fixed;
-    -webkit-tap-highlight-color:transparent;
+    background-attachment:fixed;-webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;user-select:none;
-    padding:24px 16px 100px;
-    display:flex;justify-content:center;
-    overflow-x:hidden;
+    padding:24px 16px 100px;display:flex;justify-content:center;overflow-x:hidden;
   }
   input{-webkit-user-select:text;user-select:text}
   .wrap{width:100%;max-width:720px;position:relative;z-index:1}
@@ -75,6 +66,26 @@
     box-shadow:0 0 0 6px rgba(255,204,102,.12), 0 0 22px rgba(255,204,102,.5);
   }
   .btn.small{padding:8px 14px;font-size:13px;border-radius:10px}
+
+  /* OP 按钮 */
+  .op-btn{
+    display:none;
+    padding:6px 12px;font-size:12px;font-weight:800;
+    border:1px solid rgba(255,204,102,.55);
+    background:linear-gradient(160deg,rgba(255,184,77,.25),rgba(255,138,61,.15));
+    color:var(--gold);border-radius:9px;
+    cursor:pointer;font-family:inherit;
+    letter-spacing:1px;
+    animation:opGlow 2s ease-in-out infinite;
+  }
+  .op-btn.show{display:inline-block}
+  @keyframes opGlow{
+    0%,100%{box-shadow:0 0 0 0 rgba(255,204,102,.35)}
+    50%{box-shadow:0 0 12px 2px rgba(255,204,102,.35)}
+  }
+  .op-btn:hover{
+    background:linear-gradient(160deg,rgba(255,184,77,.4),rgba(255,138,61,.25));
+  }
 
   .panel{
     background:linear-gradient(180deg,var(--panel-a),var(--panel-b));
@@ -227,6 +238,9 @@
   .btn.ghost{background:rgba(255,255,255,.07);color:var(--text)}
   .btn.ghost:hover{background:rgba(255,255,255,.11)}
   .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700}
+  .btn.danger{background:rgba(255,90,90,.15);color:#ff9a9a;border:1px solid rgba(255,90,90,.35)}
+  .btn.danger:hover{background:rgba(255,90,90,.25)}
+  .btn.block{width:100%}
   .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
 
   .lb-fab{
@@ -258,6 +272,7 @@
     border:1px solid var(--line);border-radius:20px;padding:22px;
     box-shadow:0 30px 60px -20px rgba(0,0,0,.9);
     animation:modalIn .25s cubic-bezier(.15,.9,.3,1);
+    max-height:90vh;overflow-y:auto;
   }
   @keyframes modalIn{
     from{opacity:0;transform:translateY(20px) scale(.95)}
@@ -325,6 +340,70 @@
   .lb-score{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:#9db4ff}
 
   .empty{color:#7b81ad;font-size:13px;text-align:center;padding:26px 8px}
+
+  /* ===== OP 菜单 ===== */
+  .op-section{
+    background:rgba(255,204,102,.05);
+    border:1px solid rgba(255,204,102,.2);
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .op-section:last-child{margin-bottom:0}
+  .op-section h4{
+    font-size:12px;font-weight:700;
+    color:var(--gold);
+    margin:0 0 10px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  .op-row{
+    display:flex;gap:8px;margin-bottom:8px;
+  }
+  .op-row:last-child{margin-bottom:0}
+  .op-row input{
+    flex:1;min-width:0;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:10px;
+    padding:9px 11px;
+    color:var(--text);font-size:14px;font-family:inherit;outline:none;
+    transition:border-color .15s;
+  }
+  .op-row input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,204,102,.15)}
+  .op-row .btn{
+    flex:none;
+    padding:9px 14px;
+    font-size:13px;
+    border-radius:10px;
+  }
+  .op-btn-row{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  }
+  .op-btn-row .btn{
+    width:100%;
+    padding:10px 12px;
+    font-size:13px;
+  }
+
+  .op-toast{
+    position:fixed;
+    left:50%;bottom:80px;
+    transform:translateX(-50%) translateY(20px);
+    background:linear-gradient(160deg,#2a1a3d,#1a1526);
+    border:1px solid rgba(255,204,102,.4);
+    color:var(--gold);
+    padding:10px 20px;border-radius:12px;
+    font-size:13px;font-weight:700;
+    z-index:10000;
+    opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;
+    box-shadow:0 10px 30px -8px rgba(0,0,0,.8);
+  }
+  .op-toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
 </style>
 </head>
 <body>
@@ -339,6 +418,7 @@
   <div class="user-bar">
     <span id="userText">加载中…</span>
     <span class="points" id="pointsBox" title="当前点数">💎 <span id="pointsVal">0</span></span>
+    <button id="opBtn" class="op-btn" type="button" title="OP 菜单">⚙ OP</button>
     <button id="userAction" class="btn ghost small" type="button">退出</button>
   </div>
 
@@ -378,6 +458,7 @@
 
 <button id="lbFab" class="lb-fab" type="button" title="排行榜" aria-label="排行榜">🏆</button>
 
+<!-- 排行榜 -->
 <div id="lbModal" class="modal hidden">
   <div class="modal-backdrop" data-close-lb></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
@@ -387,6 +468,50 @@
   </div>
 </div>
 
+<!-- OP 菜单 -->
+<div id="opModal" class="modal hidden">
+  <div class="modal-backdrop" data-close-op></div>
+  <div class="modal-panel" role="dialog" aria-modal="true">
+    <button class="modal-close" type="button" data-close-op aria-label="关闭">×</button>
+    <h3 class="modal-title">⚙ OP 菜单</h3>
+    <p class="modal-subtitle">管理员权限 · 操作立即生效</p>
+
+    <div class="op-section">
+      <h4>数值修改</h4>
+      <div class="op-row">
+        <input id="opPoints" type="number" min="0" step="1" placeholder="点数">
+        <button id="opSetPoints" class="btn gold">应用</button>
+      </div>
+      <div class="op-row">
+        <input id="opClicks" type="number" min="0" step="1" placeholder="总点击">
+        <button id="opSetClicks" class="btn gold">应用</button>
+      </div>
+    </div>
+
+    <div class="op-section">
+      <h4>升级等级</h4>
+      <div id="opUpgradeList"></div>
+    </div>
+
+    <div class="op-section">
+      <h4>批量操作</h4>
+      <div class="op-btn-row">
+        <button id="opMaxAll" class="btn gold">全部满级</button>
+        <button id="opReset" class="btn danger">重置数据</button>
+      </div>
+    </div>
+
+    <div class="op-section">
+      <h4>内置加成</h4>
+      <div class="op-btn-row">
+        <button id="opQuick100k" class="btn ghost">+10万 点数</button>
+        <button id="opQuick1m" class="btn ghost">+100万 点数</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 登录弹窗 -->
 <div id="authModal" class="modal hidden">
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
@@ -406,8 +531,8 @@
       <label>
         <span>用户名</span>
         <input id="authUsername" type="text" autocomplete="username"
-               placeholder="3-16 位字母、数字或下划线"
-               minlength="3" maxlength="16" required>
+               placeholder="1-16 位中文、字母、数字或下划线"
+               minlength="1" maxlength="16" required>
       </label>
       <label>
         <span>密码</span>
@@ -417,9 +542,12 @@
       <button type="submit" class="btn primary" id="authSubmit">登录</button>
     </form>
 
-    <p class="auth-tip">注册仅需用户名 + 密码，无需邮箱<br>用户名不支持中文和空格</p>
+    <p class="auth-tip">注册仅需用户名 + 密码，无需邮箱</p>
   </div>
 </div>
+
+<!-- Toast -->
+<div id="opToast" class="op-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -427,7 +555,7 @@
   'use strict';
 
   /* ============================================================
-   *  常量
+   *  配置
    * ============================================================ */
   const CONFIG = {
     POINT_PER_CLICKS: 10,
@@ -435,11 +563,13 @@
     LB_REFRESH_MS: 10 * 60 * 1000,
     SUPABASE_URL: 'https://ideuctxwohmwdbdtjyuh.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkZXVjdHh3b2htd2RiZHRqeXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MjE4MDUsImV4cCI6MjEwNTk5NzgwNX0.YPy9y6njWnU5J3ptf1rSKImAVfnAnUR1TbljOd2D-EE',
-    EMAIL_DOMAIN: '@clicks.game'
+    EMAIL_DOMAIN: '@clicks.game',
+    // 主人账号的用户名（区分大小写）
+    OWNER_NAME: '红石a'
   };
 
   /* ============================================================
-   *  内置升级配置（外部加载失败时的保底）
+   *  内置升级配置
    * ============================================================ */
   const BUILTIN_UPGRADES = [
     {
@@ -479,12 +609,11 @@
     }
   ];
 
-  /* ============================================================
-   *  全局状态
-   * ============================================================ */
   let upgradeDefs = BUILTIN_UPGRADES.slice();
-  let upgradeSource = '内置';
 
+  /* ============================================================
+   *  Supabase
+   * ============================================================ */
   let sb = null;
   try {
     if (window.supabase && window.supabase.createClient) {
@@ -494,6 +623,9 @@
     console.error('Supabase 初始化失败', e);
   }
 
+  /* ============================================================
+   *  DOM
+   * ============================================================ */
   const $ = id => document.getElementById(id);
   const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps');
   const clickBtn = $('clickBtn');
@@ -502,6 +634,9 @@
   const upgradeList = $('upgradeList'), upgradeBadge = $('upgradeBadge');
   const lbEl = $('leaderboard'), lbFab = $('lbFab'), lbModal = $('lbModal');
   const userText = $('userText'), userAction = $('userAction');
+  const opBtn = $('opBtn'), opModal = $('opModal');
+  const opPoints = $('opPoints'), opClicks = $('opClicks'), opUpgradeList = $('opUpgradeList');
+  const opToast = $('opToast');
   const authModal = $('authModal'), authForm = $('authForm');
   const authUsername = $('authUsername'), authPassword = $('authPassword');
   const authSubmit = $('authSubmit'), authError = $('authError'), authInfo = $('authInfo');
@@ -510,6 +645,9 @@
   const tabBtns = authModal.querySelectorAll('.tab[data-tab]');
   const bgParticles = $('bgParticles');
 
+  /* ============================================================
+   *  状态
+   * ============================================================ */
   let currentUser = null;
   let currentProfile = null;
 
@@ -528,6 +666,9 @@
   let authForced = true;
   let lbData = [];
   let syncing = false;
+
+  let isOP = false;
+  let opAutoOpenedThisSession = false;
 
   /* ============================================================
    *  工具
@@ -562,19 +703,49 @@
     if (!u) return '';
     const meta = u.user_metadata || {};
     if (meta.username) return meta.username;
-    if (u.email) return u.email.split('@')[0];
+    if (u.email) {
+      // 尝试从邮箱反解用户名（简单情况：无编码）
+      const local = u.email.split('@')[0];
+      if (!local.startsWith('_u')) return local;
+    }
     return '玩家';
   }
 
+  // 用户名 → 安全邮箱
+  // 支持中文 / emoji 等：非 ASCII 字符用 _u<hex>_ 编码
   function usernameToEmail(name) {
-    return name.trim().toLowerCase() + CONFIG.EMAIL_DOMAIN;
+    let safe = '';
+    for (const ch of name) {
+      const code = ch.codePointAt(0);
+      if ((code >= 97 && code <= 122) ||
+          (code >= 48 && code <= 57) ||
+          ch === '_') {
+        safe += ch;
+      } else if (code >= 65 && code <= 90) {
+        safe += ch.toLowerCase();
+      } else {
+        safe += '_u' + code.toString(16) + '_';
+      }
+    }
+    return safe + CONFIG.EMAIL_DOMAIN;
   }
 
+  // 用户名规则：1-16 位，中文/字母/数字/下划线
   function validateUsername(name) {
-    if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) {
-      return '用户名需为 3-16 位字母、数字或下划线';
+    if (name.length < 1 || name.length > 16) {
+      return '用户名长度需为 1-16 位';
+    }
+    if (!/^[\u4e00-\u9fa5A-Za-z0-9_]+$/.test(name)) {
+      return '用户名只能包含中文、字母、数字或下划线';
     }
     return '';
+  }
+
+  function toast(msg, ms) {
+    opToast.textContent = msg;
+    opToast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => opToast.classList.remove('show'), ms || 1800);
   }
 
   /* ============================================================
@@ -590,7 +761,6 @@
   }
 
   async function loadUpgradeConfig() {
-    // 支持 ?config=xxx.json 覆盖默认路径
     const params = new URLSearchParams(location.search);
     const customUrl = params.get('config');
     const url = customUrl || 'upgrades.json';
@@ -600,8 +770,6 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
 
       const data = await res.json();
-
-      // 兼容纯数组 或 { upgrades: [...] }
       let list = null;
       if (Array.isArray(data)) list = data;
       else if (data && Array.isArray(data.upgrades)) list = data.upgrades;
@@ -612,19 +780,17 @@
       if (!valid.length) throw new Error('没有有效的升级项');
 
       upgradeDefs = valid;
-      upgradeSource = customUrl ? '远程' : '外部';
-      console.log('[升级配置] 已从 ' + url + ' 加载 ' + valid.length + ' 项升级');
+      console.log('[升级配置] 已从 ' + url + ' 加载 ' + valid.length + ' 项');
       return true;
     } catch (e) {
       console.warn('[升级配置] 加载 ' + url + ' 失败（' + e.message + '），使用内置配置');
       upgradeDefs = BUILTIN_UPGRADES.slice();
-      upgradeSource = '内置';
       return false;
     }
   }
 
   /* ============================================================
-   *  升级引擎：从配置计算价格 / 效果 / 文本
+   *  升级引擎
    * ============================================================ */
   function findDef(key) {
     return upgradeDefs.find(u => u.key === key);
@@ -635,7 +801,6 @@
     return Number(currentProfile.upgrades[key]) || 0;
   }
 
-  // 计算某个升级在指定等级下的"购买下一级"价格
   function calcCost(def, level) {
     const c = def.cost || {};
     if (c.type === 'exponential') {
@@ -663,7 +828,6 @@
     return Infinity;
   }
 
-  // 生成效果文本
   function effectText(def, level) {
     const e = def.effect || {};
     const t = e.texts || {};
@@ -684,8 +848,7 @@
         value = 1 + level;
         break;
       }
-      default:
-        break;
+      default: break;
     }
 
     return String(t.value || '{value}')
@@ -693,14 +856,12 @@
       .replace(/\{sec\}/g, sec);
   }
 
-  // 找某个 effect type 对应的升级项 + 当前等级
   function findEffect(type) {
     const def = upgradeDefs.find(u => u.effect && u.effect.type === type);
     if (!def) return null;
     return { def: def, level: getUpgradeLevel(def.key) };
   }
 
-  // 自动点击间隔（毫秒），null = 没有自动点击
   function engineGetAutoClickInterval() {
     const found = findEffect('autoClickInterval');
     if (!found || found.level <= 0) return null;
@@ -708,7 +869,6 @@
     return arr[Math.min(found.level, arr.length - 1)] || null;
   }
 
-  // 自动点击每次增加的点击数
   function engineGetAutoClickMultiplier() {
     const found = findEffect('autoClickMultiplier');
     if (!found || found.level <= 0) return 1;
@@ -768,7 +928,6 @@
     if (!data.upgrades || typeof data.upgrades !== 'object') {
       data.upgrades = {};
     } else {
-      // 保证所有数字字段为 number
       const cleaned = {};
       for (const k in data.upgrades) {
         const v = Number(data.upgrades[k]);
@@ -792,7 +951,6 @@
 
   async function ensureProfile() {
     if (!sb || !currentUser) return null;
-
     let p = await loadProfile();
     if (p) return p;
 
@@ -830,6 +988,179 @@
   }
 
   /* ============================================================
+   *  OP 检测
+   * ============================================================ */
+  function detectOP() {
+    const name = usernameOf(currentUser);
+    isOP = (name === CONFIG.OWNER_NAME);
+    opBtn.classList.toggle('show', isOP);
+
+    if (isOP) {
+      console.log('%c[OP] 检测到主人身份：' + name, 'color:#ffcc66;font-weight:bold;font-size:14px');
+      // 本会话内自动打开一次
+      if (!opAutoOpenedThisSession) {
+        opAutoOpenedThisSession = true;
+        setTimeout(() => {
+          openOpModal();
+        }, 700);
+      }
+    } else {
+      // 关闭可能已打开的 OP 菜单
+      opModal.classList.add('hidden');
+    }
+  }
+
+  function openOpModal() {
+    if (!isOP) return;
+    opModal.classList.remove('hidden');
+    // 预填当前值
+    opPoints.value = currentProfile ? currentProfile.points : 0;
+    opClicks.value = currentProfile ? currentProfile.total_clicks : 0;
+    renderOpUpgradeList();
+  }
+
+  function closeOpModal() {
+    opModal.classList.add('hidden');
+  }
+
+  function renderOpUpgradeList() {
+    opUpgradeList.innerHTML = upgradeDefs.map(def => {
+      const lv = getUpgradeLevel(def.key);
+      return '<div class="op-row">'
+        + '<input type="number" min="0" max="' + def.maxLevel + '" '
+        + 'data-op-upgrade="' + def.key + '" '
+        + 'placeholder="' + escapeHtml(def.name) + ' (' + lv + '/' + def.maxLevel + ')">'
+        + '<button class="btn gold" data-op-set-upgrade="' + def.key + '">应用</button>'
+        + '</div>';
+    }).join('');
+  }
+
+  /* ============================================================
+   *  OP 操作（走 RPC，服务端二次校验）
+   * ============================================================ */
+  async function opApply(points, clicks, upgrades) {
+    if (!isOP || !sb || !currentUser) return;
+
+    const payload = {
+      p_points: (points === undefined || points === null) ? null : Math.floor(points),
+      p_total_clicks: (clicks === undefined || clicks === null) ? null : Math.floor(clicks),
+      p_upgrades: upgrades || null
+    };
+
+    const { data, error } = await sb.rpc('op_set_profile', payload);
+
+    if (error) {
+      console.warn('[OP] 操作失败', error);
+      toast('失败：' + (error.message || '未知错误'));
+      return false;
+    }
+
+    const res = data || {};
+    if (!res.ok) {
+      const msgs = {
+        not_authenticated: '登录已失效',
+        not_op: '你没有 OP 权限',
+        profile_not_found: '数据异常'
+      };
+      toast(msgs[res.error] || ('失败：' + res.error));
+      return false;
+    }
+
+    // 重新加载 profile
+    const p = await loadProfile();
+    if (p) {
+      setProfile(p);
+      opPoints.value = p.points;
+      opClicks.value = p.total_clicks;
+      renderOpUpgradeList();
+    }
+
+    return true;
+  }
+
+  function bindOpEvents() {
+    opBtn.addEventListener('click', openOpModal);
+
+    opModal.addEventListener('click', function (e) {
+      if (e.target.closest('[data-close-op]')) closeOpModal();
+    });
+
+    // 设置点数
+    $('opSetPoints').addEventListener('click', async () => {
+      const v = Number(opPoints.value);
+      if (!isFinite(v) || v < 0) { toast('请输入有效数值'); return; }
+      toast('设置中…');
+      if (await opApply(v, null, null)) toast('✓ 点数已设为 ' + v);
+    });
+
+    // 设置总点击
+    $('opSetClicks').addEventListener('click', async () => {
+      const v = Number(opClicks.value);
+      if (!isFinite(v) || v < 0) { toast('请输入有效数值'); return; }
+      toast('设置中…');
+      if (await opApply(null, v, null)) toast('✓ 总点击已设为 ' + v);
+    });
+
+    // 单个升级等级
+    opUpgradeList.addEventListener('click', async function (e) {
+      const btn = e.target.closest('[data-op-set-upgrade]');
+      if (!btn) return;
+      const key = btn.dataset.opSetUpgrade;
+      const def = findDef(key);
+      if (!def) return;
+      const input = opUpgradeList.querySelector('[data-op-upgrade="' + key + '"]');
+      const v = Number(input.value);
+      if (!isFinite(v) || v < 0) { toast('请输入有效数值'); return; }
+      const clamped = Math.min(Math.max(0, Math.floor(v)), def.maxLevel);
+
+      const newUpg = Object.assign({}, (currentProfile && currentProfile.upgrades) || {});
+      newUpg[key] = clamped;
+
+      toast('设置中…');
+      if (await opApply(null, null, newUpg)) toast('✓ ' + def.name + ' → ' + clamped);
+    });
+
+    // 全部满级
+    $('opMaxAll').addEventListener('click', async () => {
+      const newUpg = {};
+      for (const def of upgradeDefs) {
+        newUpg[def.key] = def.maxLevel;
+      }
+      toast('满级中…');
+      if (await opApply(null, null, newUpg)) {
+        toast('✓ 全部升级已满级');
+        restartAutoClickIfNeeded();
+      }
+    });
+
+    // 重置
+    $('opReset').addEventListener('click', async () => {
+      if (!confirm('确定重置所有数据吗？（点数、点击、升级全部归零）')) return;
+      const newUpg = {};
+      for (const def of upgradeDefs) {
+        newUpg[def.key] = 0;
+      }
+      toast('重置中…');
+      if (await opApply(0, 0, newUpg)) {
+        toast('✓ 数据已重置');
+        stopAutoClick();
+      }
+    });
+
+    // 快速加点数
+    $('opQuick100k').addEventListener('click', async () => {
+      const cur = (currentProfile && currentProfile.points) || 0;
+      toast('加分中…');
+      if (await opApply(cur + 100000, null, null)) toast('✓ +100000 点数');
+    });
+    $('opQuick1m').addEventListener('click', async () => {
+      const cur = (currentProfile && currentProfile.points) || 0;
+      toast('加分中…');
+      if (await opApply(cur + 1000000, null, null)) toast('✓ +1000000 点数');
+    });
+  }
+
+  /* ============================================================
    *  同步
    * ============================================================ */
   function setSyncChip(text, ok) {
@@ -860,6 +1191,10 @@
       pointsVal.textContent = currentProfile.points;
       countEl.textContent = currentProfile.total_clicks;
       renderUpgradeList();
+      if (isOP && !opModal.classList.contains('hidden')) {
+        opPoints.value = currentProfile.points;
+        opClicks.value = currentProfile.total_clicks;
+      }
 
       setSyncChip('已同步', true);
     } catch (err) {
@@ -1000,7 +1335,6 @@
   }
 
   lbFab.addEventListener('click', openLbModal);
-
   lbModal.addEventListener('click', function (e) {
     if (e.target.closest('[data-close-lb]')) closeLbModal();
   });
@@ -1010,9 +1344,7 @@
    * ============================================================ */
   function totalUpgradeLevel() {
     let sum = 0;
-    for (const def of upgradeDefs) {
-      sum += getUpgradeLevel(def.key);
-    }
+    for (const def of upgradeDefs) sum += getUpgradeLevel(def.key);
     return sum;
   }
 
@@ -1112,7 +1444,7 @@
       const msgs = {
         insufficient: '点数不足',
         max_level: '已经满级啦',
-        not_authenticated: '登录状态已失效，请重新登录',
+        not_authenticated: '登录状态已失效',
         profile_not_found: '数据异常，请重新登录',
         invalid_key: '升级项不存在',
         invalid_param: '参数错误'
@@ -1138,7 +1470,6 @@
       setTimeout(() => newItem.classList.remove('flash'), 850);
     }
 
-    // 自动点击相关升级后，检查是否需要重启定时器
     restartAutoClickIfNeeded();
   }
 
@@ -1210,6 +1541,9 @@
     authSubmit.disabled = true;
     authSubmit.textContent = authMode === 'register' ? '注册中…' : '登录中…';
 
+    // 检测是否为主人注册
+    const isOwnerName = (username === CONFIG.OWNER_NAME);
+
     try {
       if (authMode === 'register') {
         const { data, error } = await sb.auth.signUp({
@@ -1225,6 +1559,9 @@
           authSubmit.disabled = false;
           authSubmit.textContent = '注册并登录';
           return;
+        }
+        if (isOwnerName) {
+          console.log('[OP] 主人账号注册成功');
         }
       } else {
         const { error } = await sb.auth.signInWithPassword({
@@ -1261,7 +1598,7 @@
   }
 
   /* ============================================================
-   *  事件绑定
+   *  事件
    * ============================================================ */
   clickBtn.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -1272,6 +1609,7 @@
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
+      if (!opModal.classList.contains('hidden')) { closeOpModal(); return; }
       if (!lbModal.classList.contains('hidden')) { closeLbModal(); return; }
       if (!authModal.classList.contains('hidden')) {
         if (authForced && !currentUser) return;
@@ -1284,6 +1622,7 @@
     if (e.repeat) return;
     if (!authModal.classList.contains('hidden')) return;
     if (!lbModal.classList.contains('hidden')) return;
+    if (!opModal.classList.contains('hidden')) return;
     if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (!currentUser || !currentProfile) return;
 
@@ -1324,6 +1663,9 @@
     }
     setProfile(p);
 
+    // 关键：检测 OP 身份
+    detectOP();
+
     countEl.textContent = currentProfile.total_clicks || 0;
 
     sessionStart = Date.now();
@@ -1352,6 +1694,10 @@
     currentProfile = null;
     sessionClicks = 0;
     pendingClicks = 0;
+    isOP = false;
+    opAutoOpenedThisSession = false;
+
+    opBtn.classList.remove('show');
 
     if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
     if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
@@ -1375,18 +1721,18 @@
   async function init() {
     buildParticles();
     renderUserBar();
-
-    // 先用内置配置渲染一次，避免首屏空白
     renderUpgradeList();
+    bindOpEvents();
+    setSyncChip('等待登录…', false);
 
-    // 异步加载外部配置，成功后重新渲染
+    // 异步加载外置升级配置
     loadUpgradeConfig().then(() => {
       renderUpgradeList();
-      // 如果已经在游戏中，可能需要更新自动点击定时器
       restartAutoClickIfNeeded();
+      if (isOP && !opModal.classList.contains('hidden')) {
+        renderOpUpgradeList();
+      }
     });
-
-    setSyncChip('等待登录…', false);
 
     if (!sb) {
       userText.textContent = '云端不可用';
