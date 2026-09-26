@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0c1a">
-<meta name="description" content="限时点击挑战小游戏，注册后可上传成绩到云端排行榜">
+<meta name="description" content="限时点击挑战小游戏，登录后可上传成绩和升级">
 <title>⚡ 疯狂点击 · 限时挑战</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <style>
@@ -17,6 +17,8 @@
     --line:rgba(255,255,255,.07);
     --accent:#4f6dff;
     --accent2:#8b5bff;
+    --gold:#ffcc66;
+    --good:#33d17a;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
@@ -33,7 +35,7 @@
     display:flex;justify-content:center;
   }
   input{-webkit-user-select:text;user-select:text}
-  .wrap{width:100%;max-width:920px}
+  .wrap{width:100%;max-width:1040px}
 
   header{text-align:center;margin-bottom:14px}
   h1{font-size:clamp(22px,5vw,30px);margin:0 0 8px;letter-spacing:.5px}
@@ -41,20 +43,34 @@
   .sub b{color:#9db4ff}
 
   .user-bar{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    display:flex;align-items:center;gap:10px;
     background:rgba(255,255,255,.04);
     border:1px solid var(--line);
     border-radius:14px;
     padding:10px 14px;
     margin-bottom:16px;
     font-size:14px;
-    min-height:46px;
+    min-height:50px;
+    flex-wrap:wrap;
   }
   .user-bar .uname{color:#9db4ff;font-weight:700}
+  .user-bar .points{
+    margin-left:auto;
+    display:inline-flex;align-items:center;gap:5px;
+    background:linear-gradient(135deg,rgba(255,204,102,.18),rgba(255,204,102,.06));
+    border:1px solid rgba(255,204,102,.32);
+    color:var(--gold);
+    padding:5px 12px;border-radius:99px;
+    font-weight:700;font-variant-numeric:tabular-nums;
+    font-size:13px;
+  }
   .btn.small{padding:8px 14px;font-size:13px;border-radius:10px}
 
   .grid{display:grid;gap:16px;grid-template-columns:1fr}
-  @media(min-width:860px){.grid{grid-template-columns:1.05fr .95fr;align-items:start}}
+  @media(min-width:900px){
+    .grid{grid-template-columns:1.12fr .88fr;align-items:start}
+    .left-col{display:flex;flex-direction:column;gap:16px}
+  }
 
   .panel{
     background:linear-gradient(180deg,var(--panel-a),var(--panel-b));
@@ -74,11 +90,11 @@
 
   .click-btn{
     display:block;width:100%;
-    height:clamp(200px,36vh,300px);
+    height:clamp(180px,32vh,270px);
     border:0;border-radius:22px;
     background:linear-gradient(160deg,var(--accent),var(--accent2) 70%);
     color:#fff;font-family:inherit;
-    font-size:clamp(24px,6vw,34px);font-weight:800;letter-spacing:3px;
+    font-size:clamp(22px,5.5vw,32px);font-weight:800;letter-spacing:3px;
     cursor:pointer;touch-action:manipulation;
     box-shadow:0 16px 34px -14px rgba(91,124,255,.9),inset 0 -4px 0 rgba(0,0,0,.22);
     transition:transform .06s ease,filter .2s ease,background .2s ease;
@@ -99,12 +115,19 @@
   .result.win{border-color:rgba(51,209,122,.45);background:rgba(51,209,122,.09)}
   @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-  .result-score{font-size:46px;font-weight:800;text-align:center;line-height:1;
+  .result-score{font-size:44px;font-weight:800;text-align:center;line-height:1;
     font-variant-numeric:tabular-nums;
     background:linear-gradient(180deg,#fff,#9db4ff);
     -webkit-background-clip:text;background-clip:text;color:transparent}
   .result-score small{font-size:16px;font-weight:600;margin-left:4px;color:var(--muted);-webkit-text-fill-color:var(--muted)}
-  .result-msg{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 14px}
+  .result-msg{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 6px}
+  .result-reward{
+    text-align:center;
+    font-size:14px;font-weight:700;
+    color:var(--gold);
+    margin:0 0 14px;
+  }
+  .result-reward.hidden{display:none}
 
   .btn{
     border:0;border-radius:12px;padding:11px 16px;
@@ -116,8 +139,9 @@
   .btn.primary:hover{filter:brightness(1.08)}
   .btn.ghost{background:rgba(255,255,255,.07);color:var(--text)}
   .btn.ghost:hover{background:rgba(255,255,255,.11)}
+  .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700}
   .btn.block{width:100%}
-  .btn:disabled{opacity:.65;cursor:default;transform:none;filter:none}
+  .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
   .stack{display:flex;flex-direction:column;gap:8px;margin-top:2px}
 
   .panel h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
@@ -126,7 +150,7 @@
   .badge.cloud{background:rgba(51,209,122,.16);color:#5fe0a0}
   .badge.warn{background:rgba(255,150,60,.16);color:#ffb066}
 
-  #leaderboard{display:flex;flex-direction:column;gap:6px;max-height:430px;overflow-y:auto;
+  #leaderboard{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
   #leaderboard::-webkit-scrollbar{width:6px}
   #leaderboard::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
@@ -142,11 +166,71 @@
   .lb-score{flex:none;min-width:40px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
   .empty{color:#7b81ad;font-size:14px;text-align:center;padding:28px 8px}
 
+  /* ========== 升级面板 ========== */
+  .upgrade-panel .points-hint{
+    text-align:center;
+    font-size:12px;color:var(--muted);
+    margin:-4px 0 12px;
+  }
+  .upgrade-panel .points-hint b{color:var(--gold);font-weight:700}
+
+  .upgrade-item{
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:14px;
+    padding:12px;
+    margin-bottom:9px;
+    transition:border-color .2s,background .2s;
+  }
+  .upgrade-item:last-child{margin-bottom:0}
+  .upgrade-item.is-max{
+    background:linear-gradient(135deg,rgba(255,204,102,.09),rgba(255,204,102,.02));
+    border-color:rgba(255,204,102,.3);
+  }
+  .upgrade-item.can-buy{
+    border-color:rgba(91,140,255,.35);
+    background:linear-gradient(135deg,rgba(91,140,255,.1),rgba(91,140,255,.02));
+  }
+
+  .upgrade-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+  .upgrade-icon{
+    font-size:20px;line-height:1;flex:none;
+    width:36px;height:36px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.3);border-radius:10px;
+  }
+  .upgrade-info{flex:1;min-width:0}
+  .upgrade-info h4{margin:0 0 3px;font-size:14px;font-weight:700}
+  .upgrade-info p{margin:0;font-size:11.5px;color:var(--muted);line-height:1.4}
+  .upgrade-effect{
+    display:block;font-size:11.5px;color:#9db4ff;margin-top:4px;font-weight:600;
+  }
+
+  .upgrade-lv{
+    display:flex;gap:3px;flex:none;
+    margin-top:4px;
+  }
+  .upgrade-lv i{
+    display:block;width:6px;height:6px;border-radius:50%;
+    background:rgba(255,255,255,.14);
+  }
+  .upgrade-lv i.on{background:var(--gold);box-shadow:0 0 6px rgba(255,204,102,.55)}
+
+  .upgrade-foot{display:flex;align-items:center;gap:8px}
+  .upgrade-price{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:13px;font-weight:700;color:var(--gold);
+    font-variant-numeric:tabular-nums;
+  }
+  .upgrade-price.poor{color:#ff7a7a}
+  .upgrade-foot .btn{margin-left:auto;padding:8px 14px;font-size:13px}
+
   .footer{text-align:center;color:#5f648c;font-size:12px;margin-top:22px}
 
+  /* ========== 弹窗 ========== */
   .modal{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
   .modal.hidden{display:none}
-  .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,15,.72);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,15,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
   .modal-panel{
     position:relative;z-index:1;width:100%;max-width:380px;
     background:linear-gradient(180deg,#1c1f3d,#16182f);
@@ -157,7 +241,12 @@
   .modal-close{position:absolute;top:8px;right:8px;background:transparent;border:0;color:var(--muted);
     font-size:24px;width:34px;height:34px;cursor:pointer;border-radius:9px;line-height:1;font-family:inherit}
   .modal-close:hover{background:rgba(255,255,255,.06);color:#fff}
-  .modal-title{font-size:17px;font-weight:700;margin:0 0 14px;text-align:center}
+  .modal-close.hidden{display:none}
+  .modal-title{font-size:17px;font-weight:700;margin:0 0 6px;text-align:center}
+  .modal-subtitle{
+    text-align:center;font-size:12.5px;color:var(--muted);
+    margin:0 0 14px;line-height:1.5;
+  }
 
   .tabs{display:flex;gap:5px;margin-bottom:16px;background:rgba(0,0,0,.28);padding:4px;border-radius:12px}
   .tab{flex:1;padding:9px;border:0;border-radius:9px;background:transparent;color:var(--muted);
@@ -193,31 +282,41 @@
   </header>
 
   <div class="user-bar">
-    <span id="userText">未登录 · 可先试玩</span>
-    <button id="userAction" class="btn ghost small" type="button">登录 / 注册</button>
+    <span id="userText">加载中…</span>
+    <span class="points" id="pointsBox" title="点击点数">💎 <span id="pointsVal">0</span></span>
+    <button id="userAction" class="btn ghost small" type="button">退出</button>
   </div>
 
   <div class="grid">
-    <section class="panel">
-      <div class="hud">
-        <div class="hud-item"><span class="label">剩余时间</span><span class="val" id="timer">10.00</span></div>
-        <div class="hud-item"><span class="label">点击次数</span><span class="val" id="count">0</span></div>
-        <div class="hud-item"><span class="label">每秒点击</span><span class="val" id="cps">0.0</span></div>
-      </div>
-
-      <div class="progress"><i id="bar"></i></div>
-
-      <button id="clickBtn" class="click-btn" type="button">开始挑战</button>
-
-      <div id="result" class="result hidden">
-        <div class="result-score"><span id="resultScore">0</span><small>次</small></div>
-        <p class="result-msg" id="resultMsg"></p>
-        <div class="stack">
-          <button id="saveBtn" class="btn primary block" type="button">上传成绩</button>
-          <button id="againBtn" class="btn ghost block" type="button">再来一次</button>
+    <div class="left-col">
+      <section class="panel">
+        <div class="hud">
+          <div class="hud-item"><span class="label">剩余时间</span><span class="val" id="timer">10.00</span></div>
+          <div class="hud-item"><span class="label">点击次数</span><span class="val" id="count">0</span></div>
+          <div class="hud-item"><span class="label">每秒点击</span><span class="val" id="cps">0.0</span></div>
         </div>
-      </div>
-    </section>
+
+        <div class="progress"><i id="bar"></i></div>
+
+        <button id="clickBtn" class="click-btn" type="button">开始挑战</button>
+
+        <div id="result" class="result hidden">
+          <div class="result-score"><span id="resultScore">0</span><small>次</small></div>
+          <p class="result-msg" id="resultMsg"></p>
+          <p class="result-reward hidden" id="resultReward"></p>
+          <div class="stack">
+            <button id="saveBtn" class="btn primary block" type="button">上传成绩</button>
+            <button id="againBtn" class="btn ghost block" type="button">再来一次</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel upgrade-panel">
+        <h2>⚡ 升级 <span class="badge" id="upgradeBadge">0 级</span></h2>
+        <p class="points-hint">当前点数 <b id="pointsHint">0</b> · 每次上传成绩可获得 <b>点击次数 / 10</b> 点数</p>
+        <div id="upgradeList"></div>
+      </section>
+    </div>
 
     <section class="panel">
       <h2>🏆 排行榜 <span class="badge" id="lbBadge">加载中…</span></h2>
@@ -233,6 +332,7 @@
   <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <button class="modal-close" type="button" data-close aria-label="关闭">×</button>
     <h3 class="modal-title" id="modalTitle">登录</h3>
+    <p class="modal-subtitle" id="modalSubtitle">必须先登录才能开始游戏</p>
 
     <div class="tabs">
       <button class="tab active" type="button" data-tab="login">登录</button>
@@ -266,6 +366,9 @@
 (function () {
   'use strict';
 
+  /* ============================================================
+   *  配置
+   * ============================================================ */
   const CONFIG = {
     DURATION: 10000,
     TARGET: 50,
@@ -274,9 +377,51 @@
     SUPABASE_URL: 'https://ideuctxwohmwdbdtjyuh.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkZXVjdHh3b2htd2RiZHRqeXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MjE4MDUsImV4cCI6MjEwNTk5NzgwNX0.YPy9y6njWnU5J3ptf1rSKImAVfnAnUR1TbljOd2D-EE',
     TABLE: 'scores',
+    PROFILES: 'profiles',
     EMAIL_DOMAIN: '@clicks.game'
   };
 
+  // 升级项定义
+  const UPGRADES = [
+    {
+      key: 'time',
+      icon: '⏱',
+      name: '时间延长',
+      desc: '每级游戏时长 +0.5 秒',
+      maxLevel: 5,
+      baseCost: 25,
+      growth: 1.6,
+      effectText: lv => lv === 0 ? '尚未升级' : `已延长 +${(lv * 0.5).toFixed(1)} 秒`
+    },
+    {
+      key: 'target',
+      icon: '🎯',
+      name: '目标降低',
+      desc: '每级目标次数 -4 次',
+      maxLevel: 5,
+      baseCost: 20,
+      growth: 1.6,
+      effectText: lv => lv === 0 ? '尚未升级' : `目标已降至 ${Math.max(10, CONFIG.TARGET - lv * 4)} 次`
+    },
+    {
+      key: 'multiplier',
+      icon: '💎',
+      name: '点数加成',
+      desc: '每级额外获得 15% 点数',
+      maxLevel: 5,
+      baseCost: 40,
+      growth: 1.8,
+      effectText: lv => lv === 0 ? '尚未升级' : `点数收益 +${lv * 15}%`
+    }
+  ];
+
+  function upgradeCost(u, level) {
+    return Math.floor(u.baseCost * Math.pow(u.growth, level));
+  }
+
+  /* ============================================================
+   *  Supabase 初始化
+   * ============================================================ */
   let sb = null;
   try {
     if (window.supabase && window.supabase.createClient) {
@@ -286,28 +431,47 @@
     console.error('Supabase 初始化失败', e);
   }
 
+  /* ============================================================
+   *  DOM
+   * ============================================================ */
   const $ = id => document.getElementById(id);
   const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps'), barEl = $('bar');
   const clickBtn = $('clickBtn');
-  const resultEl = $('result'), resultScoreEl = $('resultScore'), resultMsgEl = $('resultMsg');
+  const resultEl = $('result'), resultScoreEl = $('resultScore'), resultMsgEl = $('resultMsg'),
+        resultRewardEl = $('resultReward');
   const saveBtn = $('saveBtn'), againBtn = $('againBtn');
   const lbEl = $('leaderboard'), lbBadge = $('lbBadge');
   const userText = $('userText'), userAction = $('userAction');
+  const pointsVal = $('pointsVal'), pointsHint = $('pointsHint');
+  const upgradeList = $('upgradeList'), upgradeBadge = $('upgradeBadge');
+  const durLabel = $('durLabel'), targetLabel = $('targetLabel');
   const authModal = $('authModal'), authForm = $('authForm');
   const authUsername = $('authUsername'), authPassword = $('authPassword');
   const authSubmit = $('authSubmit'), authError = $('authError'), authInfo = $('authInfo');
-  const modalTitle = $('modalTitle');
+  const modalTitle = $('modalTitle'), modalSubtitle = $('modalSubtitle');
+  const modalCloseBtn = authModal.querySelector('.modal-close');
   const tabBtns = authModal.querySelectorAll('.tab[data-tab]');
 
-  let phase = 'idle';
+  /* ============================================================
+   *  状态
+   * ============================================================ */
+  let phase = 'idle';       // idle | playing | finished
   let clicks = 0;
   let endAt = 0;
   let rafId = 0;
   let lastScore = 0;
+  let lastEarnedPoints = 0;
+  let currentParams = null; // { duration, target, multiplier }
   let currentUser = null;
+  let currentProfile = null; // { id, points, upgrades }
   let authMode = 'login';
   let submitting = false;
+  let authForced = true;    // 强制登录模式
+  let pendingSave = false;
 
+  /* ============================================================
+   *  工具
+   * ============================================================ */
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => (
       { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
@@ -333,26 +497,92 @@
     return '';
   }
 
+  function defaultUpgrades() {
+    return { time: 0, target: 0, multiplier: 0 };
+  }
+
+  /* ============================================================
+   *  游戏参数
+   * ============================================================ */
+  function computeParams() {
+    const u = (currentProfile && currentProfile.upgrades) || defaultUpgrades();
+    return {
+      duration: CONFIG.DURATION + (u.time || 0) * 500,
+      target: Math.max(10, CONFIG.TARGET - (u.target || 0) * 4),
+      multiplier: 1 + (u.multiplier || 0) * 0.15
+    };
+  }
+
+  function refreshConfigLabels() {
+    const p = computeParams();
+    durLabel.textContent = (p.duration / 1000).toFixed(1).replace(/\.0$/, '');
+    targetLabel.textContent = p.target;
+    resetHud();
+  }
+
+  function totalUpgradeLevel() {
+    if (!currentProfile || !currentProfile.upgrades) return 0;
+    const u = currentProfile.upgrades;
+    return (u.time || 0) + (u.target || 0) + (u.multiplier || 0);
+  }
+
+  /* ============================================================
+   *  用户 / Profile
+   * ============================================================ */
+  async function loadProfile() {
+    if (!sb || !currentUser) return null;
+    const { data, error } = await sb
+      .from(CONFIG.PROFILES)
+      .select('id,points,upgrades')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+    if (error) { console.warn('加载 profile 失败', error); return null; }
+    return data;
+  }
+
+  async function ensureProfile() {
+    if (!sb || !currentUser) return null;
+    let p = await loadProfile();
+    if (p) return p;
+    // 触发器没生效？手动补一条
+    const { error } = await sb
+      .from(CONFIG.PROFILES)
+      .insert({ id: currentUser.id, points: 0, upgrades: defaultUpgrades() });
+    if (error) console.warn('创建 profile 失败', error);
+    return await loadProfile();
+  }
+
+  function setProfile(p) {
+    currentProfile = p;
+    renderUserBar();
+    renderUpgradeList();
+  }
+
   function renderUserBar() {
     if (!sb) {
-      userText.textContent = '云端不可用 · 无法登录';
+      userText.textContent = '云端不可用 · 请检查网络后刷新';
       userAction.disabled = true;
-      userAction.textContent = '离线模式';
+      pointsVal.textContent = '0';
       return;
     }
     if (currentUser) {
       userText.innerHTML = '👤 <span class="uname">' + escapeHtml(usernameOf(currentUser)) + '</span>';
       userAction.disabled = false;
-      userAction.textContent = '退出登录';
+      userAction.textContent = '退出';
       userAction.dataset.action = 'logout';
+      pointsVal.textContent = (currentProfile && currentProfile.points) || 0;
+      pointsHint.textContent = (currentProfile && currentProfile.points) || 0;
     } else {
-      userText.textContent = '未登录 · 可先试玩，上传成绩需登录';
-      userAction.disabled = false;
-      userAction.textContent = '登录 / 注册';
-      userAction.dataset.action = 'login';
+      userText.textContent = '未登录';
+      userAction.disabled = true;
+      pointsVal.textContent = '0';
+      pointsHint.textContent = '0';
     }
   }
 
+  /* ============================================================
+   *  排行榜
+   * ============================================================ */
   async function fetchScores() {
     if (!sb) throw new Error('云端不可用');
     const { data, error } = await sb
@@ -363,7 +593,6 @@
       .limit(CONFIG.SHOW);
 
     if (error) throw error;
-
     return (data || []).map(r => ({
       id: r.id,
       user_id: r.user_id,
@@ -409,22 +638,149 @@
       lbBadge.className = 'badge cloud';
       renderLeaderboard(rows);
     } catch (err) {
-      console.warn(err);
+      console.warn('排行榜加载失败', err);
       lbBadge.textContent = '加载失败';
       lbBadge.className = 'badge warn';
-      lbEl.innerHTML = '<div class="empty">排行榜加载失败，请稍后重试</div>';
+      const hint = (err && err.message) ? escapeHtml(err.message) : '请稍后重试';
+      lbEl.innerHTML = '<div class="empty">排行榜加载失败<br><span style="font-size:12px;opacity:.7">' + hint + '</span></div>';
     }
   }
 
+  /* ============================================================
+   *  升级面板
+   * ============================================================ */
+  function renderUpgradeList() {
+    const pts = (currentProfile && currentProfile.points) || 0;
+    const lvObj = (currentProfile && currentProfile.upgrades) || defaultUpgrades();
+
+    upgradeBadge.textContent = totalUpgradeLevel() + ' 级';
+
+    upgradeList.innerHTML = UPGRADES.map(u => {
+      const level = lvObj[u.key] || 0;
+      const isMax = level >= u.maxLevel;
+      const cost = isMax ? 0 : upgradeCost(u, level);
+      const canBuy = !isMax && pts >= cost;
+      const poor = !isMax && pts < cost;
+
+      const dots = Array.from({ length: u.maxLevel }, (_, i) =>
+        '<i class="' + (i < level ? 'on' : '') + '"></i>'
+      ).join('');
+
+      let btnHtml;
+      if (isMax) {
+        btnHtml = '<button class="btn ghost" disabled>已满级</button>';
+      } else if (canBuy) {
+        btnHtml = '<button class="btn gold" data-buy="' + u.key + '">升级</button>';
+      } else {
+        btnHtml = '<button class="btn ghost" disabled>点数不足</button>';
+      }
+
+      return '<div class="upgrade-item' + (isMax ? ' is-max' : (canBuy ? ' can-buy' : '')) + '">'
+        + '<div class="upgrade-head">'
+        +   '<div class="upgrade-icon">' + u.icon + '</div>'
+        +   '<div class="upgrade-info">'
+        +     '<h4>' + escapeHtml(u.name) + '</h4>'
+        +     '<p>' + escapeHtml(u.desc) + '</p>'
+        +     '<span class="upgrade-effect">' + escapeHtml(u.effectText(level)) + '</span>'
+        +   '</div>'
+        +   '<div class="upgrade-lv">' + dots + '</div>'
+        + '</div>'
+        + '<div class="upgrade-foot">'
+        +   '<span class="upgrade-price' + (poor ? ' poor' : '') + '">'
+        +     (isMax ? '—' : '💎 ' + cost)
+        +   '</span>'
+        +   btnHtml
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  async function purchaseUpgrade(key) {
+    if (!sb || !currentUser || !currentProfile) return;
+    const u = UPGRADES.find(x => x.key === key);
+    if (!u) return;
+
+    const level = (currentProfile.upgrades && currentProfile.upgrades[key]) || 0;
+    if (level >= u.maxLevel) return;
+    const cost = upgradeCost(u, level);
+    if (currentProfile.points < cost) return;
+
+    // 按钮 loading
+    const btn = upgradeList.querySelector('[data-buy="' + key + '"]');
+    if (btn) { btn.disabled = true; btn.textContent = '购买中…'; }
+
+    const { data, error } = await sb.rpc('purchase_upgrade', {
+      p_key: key,
+      p_cost: cost,
+      p_max: u.maxLevel
+    });
+
+    if (error) {
+      console.warn('购买失败', error);
+      renderUpgradeList();
+      alert('购买失败：' + (error.message || '请稍后重试'));
+      return;
+    }
+
+    const res = data || {};
+    if (!res.ok) {
+      renderUpgradeList();
+      const msgs = {
+        insufficient: '点数不足',
+        max_level: '已经满级啦',
+        not_authenticated: '登录状态已失效',
+        profile_not_found: '数据异常，请重新登录',
+        invalid_key: '升级项不存在',
+        invalid_param: '参数错误'
+      };
+      alert(msgs[res.error] || ('购买失败：' + res.error));
+      return;
+    }
+
+    // 更新本地 profile
+    const newUpg = Object.assign({}, currentProfile.upgrades || defaultUpgrades());
+    newUpg[key] = res.level;
+    setProfile({
+      id: currentProfile.id,
+      points: res.points,
+      upgrades: newUpg
+    });
+
+    // 参数变了，刷新顶部提示
+    refreshConfigLabels();
+  }
+
+  upgradeList.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-buy]');
+    if (!btn) return;
+    purchaseUpgrade(btn.dataset.buy);
+  });
+
+  /* ============================================================
+   *  游戏逻辑
+   * ============================================================ */
   function resetHud() {
-    timerEl.textContent = (CONFIG.DURATION / 1000).toFixed(2);
+    const p = computeParams();
+    timerEl.textContent = (p.duration / 1000).toFixed(2);
     countEl.textContent = '0';
     cpsEl.textContent = '0.0';
     barEl.style.width = '0%';
   }
 
   function startGame() {
+    if (!currentUser) { openAuthModal('login', true); return; }
+    if (!sb) return;
+
+    // 必须登录且已加载 profile
+    if (!currentProfile) {
+      alert('正在加载你的数据，请稍候…');
+      return;
+    }
+
+    currentParams = computeParams();
+
     clicks = 0;
+    lastEarnedPoints = 0;
     resultEl.classList.add('hidden');
     resultEl.classList.remove('win');
     resetHud();
@@ -436,20 +792,20 @@
 
     phase = 'playing';
     const now = performance.now();
-    endAt = now + CONFIG.DURATION;
+    endAt = now + currentParams.duration;
 
     cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(tick);
   }
 
   function tick(now) {
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' || !currentParams) return;
     const left = Math.max(0, endAt - now);
-    const elapsed = CONFIG.DURATION - left;
+    const elapsed = currentParams.duration - left;
 
     timerEl.textContent = (left / 1000).toFixed(2);
     cpsEl.textContent = (clicks / Math.max(elapsed, 250) * 1000).toFixed(1);
-    barEl.style.width = Math.min(1, clicks / CONFIG.TARGET) * 100 + '%';
+    barEl.style.width = Math.min(1, clicks / currentParams.target) * 100 + '%';
 
     if (left <= 0) { endGame(); return; }
     rafId = requestAnimationFrame(tick);
@@ -477,66 +833,85 @@
     clickBtn.textContent = '挑战结束';
 
     lastScore = clicks;
-    const cps = lastScore / (CONFIG.DURATION / 1000);
-    const win = lastScore >= CONFIG.TARGET;
+    const p = currentParams || computeParams();
+    const cps = lastScore / (p.duration / 1000);
+    const win = lastScore >= p.target;
+
+    // 计算点数
+    const raw = Math.floor(lastScore / 10);
+    const earned = Math.max(1, Math.floor(raw * p.multiplier));
+    lastEarnedPoints = earned;
 
     resultScoreEl.textContent = lastScore;
     resultMsgEl.textContent = win
       ? '🎉 目标达成！平均 ' + cps.toFixed(1) + ' 次/秒'
-      : '离目标还差 ' + (CONFIG.TARGET - lastScore) + ' 次 · 平均 ' + cps.toFixed(1) + ' 次/秒';
+      : '离目标还差 ' + (p.target - lastScore) + ' 次 · 平均 ' + cps.toFixed(1) + ' 次/秒';
+
+    resultRewardEl.textContent = '💎 上传可获得 ' + earned + ' 点数';
+    resultRewardEl.classList.remove('hidden');
 
     resultEl.classList.remove('hidden');
     resultEl.classList.toggle('win', win);
 
-    renderSaveBtn();
-  }
-
-  function renderSaveBtn() {
-    if (!sb) {
-      saveBtn.disabled = true;
-      saveBtn.textContent = '云端不可用';
-      return;
-    }
-    if (!currentUser) {
-      saveBtn.disabled = false;
-      saveBtn.textContent = '登录后上传成绩';
-      saveBtn.dataset.action = 'open-auth';
-      return;
-    }
     saveBtn.disabled = false;
-    saveBtn.textContent = '上传成绩 · ' + usernameOf(currentUser);
-    saveBtn.dataset.action = 'save';
+    saveBtn.textContent = '上传成绩 · 获得 ' + earned + ' 💎';
   }
 
+  /* ============================================================
+   *  上传成绩（RPC：插入分数 + 加点数）
+   * ============================================================ */
   async function handleSave() {
-    if (!currentUser) { openAuthModal('login'); return; }
+    if (!currentUser) { openAuthModal('login', true); return; }
     if (!sb) return;
+    if (phase !== 'finished') return;
 
     saveBtn.disabled = true;
     saveBtn.textContent = '上传中…';
 
-    const payload = {
-      user_id: currentUser.id,
-      name: usernameOf(currentUser),
-      score: lastScore,
-      cps: Number((lastScore / (CONFIG.DURATION / 1000)).toFixed(2))
-    };
+    const p = currentParams || computeParams();
+    const cps = Number((lastScore / (p.duration / 1000)).toFixed(2));
 
-    const { error } = await sb.from(CONFIG.TABLE).insert(payload);
+    const { data, error } = await sb.rpc('submit_score', {
+      p_name: usernameOf(currentUser),
+      p_score: lastScore,
+      p_cps: cps,
+      p_points: lastEarnedPoints
+    });
 
     if (error) {
-      console.warn(error);
+      console.warn('上传失败', error);
       saveBtn.disabled = false;
       saveBtn.textContent = '上传失败，点此重试';
       return;
     }
 
-    saveBtn.textContent = '已上传 ✓';
+    const res = data || {};
+    if (!res.ok) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '上传失败，点此重试';
+      return;
+    }
+
+    // 更新本地点数
+    if (typeof res.points === 'number') {
+      setProfile({
+        id: currentProfile.id,
+        points: res.points,
+        upgrades: currentProfile.upgrades
+      });
+    }
+
+    saveBtn.textContent = '已上传 ✓ +' + lastEarnedPoints + ' 💎';
+
     await refreshLeaderboard();
   }
 
-  function openAuthModal(mode) {
+  /* ============================================================
+   *  弹窗（强制登录）
+   * ============================================================ */
+  function openAuthModal(mode, forced) {
     if (!sb) return;
+    authForced = !!forced;
     setAuthMode(mode || 'login');
     authModal.classList.remove('hidden');
     hideAuthMessages();
@@ -546,6 +921,7 @@
   }
 
   function closeAuthModal() {
+    if (authForced && !currentUser) return; // 强制模式下不允许关闭
     authModal.classList.add('hidden');
     hideAuthMessages();
   }
@@ -554,8 +930,10 @@
     authMode = mode;
     tabBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === mode));
     modalTitle.textContent = mode === 'register' ? '注册新账号' : '登录';
+    modalSubtitle.textContent = authForced ? '必须先登录才能开始游戏' : '登录后可上传成绩、升级';
     authSubmit.textContent = mode === 'register' ? '注册并登录' : '登录';
     authPassword.setAttribute('autocomplete', mode === 'register' ? 'new-password' : 'current-password');
+    modalCloseBtn.classList.toggle('hidden', authForced);
     hideAuthMessages();
   }
 
@@ -564,13 +942,11 @@
     authError.classList.remove('hidden');
     authInfo.classList.add('hidden');
   }
-
   function showAuthInfo(msg) {
     authInfo.textContent = msg;
     authInfo.classList.remove('hidden');
     authError.classList.add('hidden');
   }
-
   function hideAuthMessages() {
     authError.classList.add('hidden');
     authInfo.classList.add('hidden');
@@ -579,7 +955,6 @@
   async function submitAuth(e) {
     e.preventDefault();
     if (submitting || !sb) return;
-
     hideAuthMessages();
 
     const username = authUsername.value.trim();
@@ -597,13 +972,13 @@
       if (authMode === 'register') {
         const { data, error } = await sb.auth.signUp({
           email: usernameToEmail(username),
-          password: password,
-          options: { data: { username: username } }
+          password,
+          options: { data: { username } }
         });
         if (error) throw error;
 
         if (!data.session) {
-          showAuthInfo('注册成功，但当前项目开启了邮箱确认，无法直接登录。请到 Supabase 后台关闭「Confirm email」。');
+          showAuthInfo('注册成功，但当前项目开启了邮箱确认。请到 Supabase 后台关闭「Confirm email」。');
           submitting = false;
           authSubmit.disabled = false;
           authSubmit.textContent = '注册并登录';
@@ -612,7 +987,7 @@
       } else {
         const { error } = await sb.auth.signInWithPassword({
           email: usernameToEmail(username),
-          password: password
+          password
         });
         if (error) throw error;
       }
@@ -627,21 +1002,13 @@
 
   function translateAuthError(err) {
     const msg = (err && (err.message || err.error_description || err.msg)) || '操作失败';
-    if (/already registered|already exists|User already/i.test(msg)) {
-      return '该用户名已被注册，换一个试试';
-    }
-    if (/Invalid login credentials/i.test(msg)) {
-      return '用户名或密码错误';
-    }
-    if (/Password should be at least/i.test(msg)) {
-      return '密码太短，Supabase 要求至少 6 位';
-    }
-    if (/Email not confirmed/i.test(msg)) {
-      return '邮箱未确认。请到 Supabase 后台关闭「Confirm email」后再试。';
-    }
-    if (/rate limit|too many/i.test(msg)) {
-      return '操作太频繁，请稍后再试';
-    }
+    if (/already registered|already exists|User already/i.test(msg)) return '该用户名已被注册，换一个试试';
+    if (/Invalid login credentials/i.test(msg)) return '用户名或密码错误';
+    if (/Password should be at least/i.test(msg)) return '密码太短，至少 6 位';
+    if (/Email not confirmed/i.test(msg)) return '邮箱未确认。请到 Supabase 后台关闭「Confirm Email」。';
+    if (/Email signups are disabled|email_provider_disabled/i.test(msg)) return '当前项目已禁用邮箱注册，请到 Supabase → Authentication → Providers 打开 Email。';
+    if (/signup.*disabled|signups.*disabled/i.test(msg)) return '当前项目已禁用注册。请到 Supabase → Authentication → Sign In / Providers 打开「Allow new users to sign up」。';
+    if (/rate limit|too many/i.test(msg)) return '操作太频繁，请稍后再试';
     return msg;
   }
 
@@ -650,9 +1017,15 @@
     await sb.auth.signOut();
   }
 
+  /* ============================================================
+   *  事件绑定
+   * ============================================================ */
   clickBtn.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault();
+
+    if (!currentUser) { openAuthModal('login', true); return; }
+
     if (phase === 'playing') registerClick();
     else if (phase === 'idle') startGame();
   });
@@ -663,21 +1036,18 @@
     if (authModal && !authModal.classList.contains('hidden')) return;
     if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
 
+    if (!currentUser) return;
+
     e.preventDefault();
     if (phase === 'playing') registerClick();
     else if (phase === 'idle') startGame();
   });
 
   againBtn.addEventListener('click', startGame);
-
-  saveBtn.addEventListener('click', function () {
-    if (saveBtn.dataset.action === 'open-auth') openAuthModal('login');
-    else handleSave();
-  });
+  saveBtn.addEventListener('click', handleSave);
 
   userAction.addEventListener('click', function () {
     if (userAction.dataset.action === 'logout') handleLogout();
-    else openAuthModal('login');
   });
 
   authForm.addEventListener('submit', submitAuth);
@@ -686,56 +1056,99 @@
     btn.addEventListener('click', () => setAuthMode(btn.dataset.tab));
   });
 
+  // backdrop 点击：非强制模式下关闭
   authModal.addEventListener('click', function (e) {
-    if (e.target.closest('[data-close]')) closeAuthModal();
+    if (!e.target.closest('[data-close]')) return;
+    if (authForced && !currentUser) return;
+    closeAuthModal();
   });
 
+  // Escape：非强制模式下关闭
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && !authModal.classList.contains('hidden')) closeAuthModal();
+    if (e.key !== 'Escape') return;
+    if (authModal.classList.contains('hidden')) return;
+    if (authForced && !currentUser) return;
+    closeAuthModal();
   });
 
-  async function init() {
-    document.getElementById('durLabel').textContent = CONFIG.DURATION / 1000;
-    document.getElementById('targetLabel').textContent = CONFIG.TARGET;
-
-    resetHud();
+  /* ============================================================
+   *  认证状态变化
+   * ============================================================ */
+  async function onSignedIn(session) {
+    currentUser = session.user;
     renderUserBar();
 
+    // 加载 / 创建 profile
+    let p = await ensureProfile();
+    if (!p) {
+      // 兜底一个本地对象，避免游戏崩溃
+      p = { id: currentUser.id, points: 0, upgrades: defaultUpgrades() };
+    }
+    setProfile(p);
+
+    closeAuthModal();
+    refreshConfigLabels();
+    refreshLeaderboard();
+    renderUpgradeList();
+  }
+
+  function onSignedOut() {
+    currentUser = null;
+    currentProfile = null;
+    renderUserBar();
+    renderUpgradeList();
+    refreshConfigLabels();
+    refreshLeaderboard();
+
+    // 强制登录：立刻弹窗
+    openAuthModal('login', true);
+  }
+
+  /* ============================================================
+   *  初始化
+   * ============================================================ */
+  async function init() {
+    resetHud();
+    renderUserBar();
+    renderUpgradeList();
+
     if (!sb) {
+      userText.textContent = '云端不可用 · 请检查网络后刷新';
       lbBadge.textContent = '离线';
       lbBadge.className = 'badge warn';
-      lbEl.innerHTML = '<div class="empty">无法连接云端，请检查网络或配置</div>';
+      lbEl.innerHTML = '<div class="empty">无法连接云端</div>';
       return;
     }
 
+    // 监听 auth
     sb.auth.onAuthStateChange(function (event, session) {
-      currentUser = session ? session.user : null;
-      renderUserBar();
-
-      if (event === 'SIGNED_IN') {
-        closeAuthModal();
-        submitting = false;
-        authSubmit.disabled = false;
-        refreshLeaderboard();
-        if (phase === 'finished') renderSaveBtn();
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+        if (session) onSignedIn(session);
       }
       if (event === 'SIGNED_OUT') {
-        submitting = false;
-        authSubmit.disabled = false;
-        refreshLeaderboard();
-        if (phase === 'finished') renderSaveBtn();
+        onSignedOut();
       }
+      submitting = false;
+      authSubmit.disabled = false;
     });
 
+    // 恢复会话
     try {
       const { data } = await sb.auth.getSession();
-      currentUser = data && data.session ? data.session.user : null;
-      renderUserBar();
+      if (data && data.session) {
+        await onSignedIn(data.session);
+      } else {
+        // 未登录 → 强制弹窗
+        openAuthModal('login', true);
+        refreshLeaderboard();
+      }
     } catch (e) {
       console.warn(e);
+      openAuthModal('login', true);
+      refreshLeaderboard();
     }
 
-    await refreshLeaderboard();
+    refreshConfigLabels();
   }
 
   init();
