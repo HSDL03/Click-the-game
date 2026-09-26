@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0c1a">
-<meta name="description" content="无尽点击挑战">
-<title>⚡ 疯狂点击</title>
+<meta name="description" content="Click the game">
+<title>Click the game</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <style>
   :root{
@@ -31,12 +31,12 @@
     background-attachment:fixed;
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;user-select:none;
-    padding:20px 16px 44px;
+    padding:24px 16px 100px;
     display:flex;justify-content:center;
     overflow-x:hidden;
   }
   input{-webkit-user-select:text;user-select:text}
-  .wrap{width:100%;max-width:1180px;position:relative;z-index:1}
+  .wrap{width:100%;max-width:720px;position:relative;z-index:1}
 
   .bg-particles{
     position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
@@ -54,8 +54,8 @@
     100%{transform:translateY(-10vh) scale(1.1);opacity:0}
   }
 
-  header{text-align:center;margin-bottom:16px}
-  h1{font-size:clamp(22px,5vw,30px);margin:0;letter-spacing:.5px;
+  header{text-align:center;margin-bottom:18px}
+  h1{font-size:clamp(22px,5vw,30px);margin:0;letter-spacing:.5px;font-weight:800;
     background:linear-gradient(180deg,#fff 30%,#8b9eff);
     -webkit-background-clip:text;background-clip:text;color:transparent;}
 
@@ -88,21 +88,12 @@
   }
   .btn.small{padding:8px 14px;font-size:13px;border-radius:10px}
 
-  .layout{display:grid;gap:16px;grid-template-columns:1fr}
-  @media(min-width:900px){
-    .layout{grid-template-columns:minmax(0,1fr) 300px;align-items:start}
-  }
-  .main-col{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .side-col{display:flex;flex-direction:column;gap:16px}
-  @media(min-width:900px){
-    .side-col{position:sticky;top:16px}
-  }
-
   .panel{
     background:linear-gradient(180deg,var(--panel-a),var(--panel-b));
     border:1px solid var(--line);
     border-radius:20px;padding:16px;
     box-shadow:0 18px 40px -22px rgba(0,0,0,.9);
+    margin-bottom:16px;
   }
 
   .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
@@ -124,56 +115,38 @@
     100%{transform:scale(1)}
   }
 
+  /* ===== 大按钮：仅缩放/位移动效 ===== */
   .click-btn{
-    position:relative;overflow:hidden;
     display:block;width:100%;
-    height:clamp(200px,36vh,300px);
+    height:clamp(220px,40vh,320px);
     border:0;border-radius:22px;
     background:linear-gradient(160deg,var(--accent),var(--accent2) 70%);
     color:#fff;font-family:inherit;
-    font-size:clamp(22px,5.5vw,32px);font-weight:800;letter-spacing:3px;
+    font-size:clamp(28px,7vw,40px);font-weight:800;letter-spacing:8px;
+    padding-left:8px;
     cursor:pointer;
     touch-action:manipulation;
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;user-select:none;
     will-change:transform;
-    transform:translateZ(0) scale(1);
+    transform:translateZ(0);
     backface-visibility:hidden;
     -webkit-backface-visibility:hidden;
-    transition:transform .07s cubic-bezier(.2,.8,.3,1), box-shadow .3s ease, filter .2s ease;
-    box-shadow:0 16px 34px -14px rgba(91,124,255,.9),inset 0 -4px 0 rgba(0,0,0,.22);
+    transition:
+      transform .15s cubic-bezier(.2,.8,.3,1),
+      box-shadow .2s ease,
+      filter .15s ease;
+    box-shadow:0 18px 36px -16px rgba(91,124,255,.85), inset 0 -4px 0 rgba(0,0,0,.22);
   }
-  .click-btn::before{
-    content:'';
-    position:absolute;inset:-2px;
-    border-radius:24px;
-    background:radial-gradient(circle at 50% 50%, rgba(139,91,255,.35), transparent 60%);
-    opacity:.6;
-    animation:breathe 3s ease-in-out infinite;
-    pointer-events:none;
-    z-index:-1;
+  .click-btn:hover:not(:disabled){
+    transform:translateZ(0) translateY(-3px);
+    box-shadow:0 26px 46px -18px rgba(91,124,255,1), inset 0 -4px 0 rgba(0,0,0,.22);
   }
-  @keyframes breathe{
-    0%,100%{opacity:.35;transform:scale(1)}
-    50%{opacity:.75;transform:scale(1.03)}
-  }
-  .click-btn:not(:disabled):active{
-    transform:translateZ(0) scale(.955);
-    transition-duration:.03s;
-  }
-
-  .ripple{
-    position:absolute;
-    width:20px;height:20px;
-    margin-left:-10px;margin-top:-10px;
-    border-radius:50%;
-    background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0) 70%);
-    transform:scale(0);
-    pointer-events:none;
-    animation:rippleAnim .7s ease-out forwards;
-  }
-  @keyframes rippleAnim{
-    to{transform:scale(22);opacity:0}
+  .click-btn:active:not(:disabled){
+    transform:translateZ(0) translateY(0) scale(.97);
+    transition-duration:.06s;
+    filter:brightness(.94);
+    box-shadow:0 8px 16px -8px rgba(91,124,255,.6), inset 0 -1px 0 rgba(0,0,0,.22);
   }
 
   .status-bar{
@@ -223,61 +196,11 @@
     100%{transform:translate(-50%,-280%) scale(.9);opacity:0}
   }
 
-  .lb-panel{padding:14px}
-  .lb-panel h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
-  .badge{margin-left:auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
     background:rgba(255,255,255,.08);color:#a8b0dd}
   .badge.cloud{background:rgba(51,209,122,.16);color:#5fe0a0}
   .badge.warn{background:rgba(255,150,60,.16);color:#ffb066}
   .badge.gold{background:rgba(255,204,102,.16);color:var(--gold)}
-
-  #leaderboard{display:flex;flex-direction:column;gap:5px}
-
-  .lb-row{
-    display:flex;align-items:center;gap:8px;
-    padding:8px 9px;border-radius:10px;
-    background:rgba(255,255,255,.035);
-    font-size:13px;
-    animation:lbRowIn .35s ease backwards;
-  }
-  @keyframes lbRowIn{
-    from{opacity:0;transform:translateX(-8px)}
-    to{opacity:1;transform:none}
-  }
-  .lb-row.extra{display:none}
-  .lb-expanded .lb-row.extra{display:flex}
-  .lb-row.is-me{
-    background:linear-gradient(135deg,rgba(91,140,255,.18),rgba(91,140,255,.06));
-    box-shadow:inset 0 0 0 1px rgba(91,140,255,.45);
-    animation:meRowPulse 2.5s ease-in-out infinite;
-  }
-  @keyframes meRowPulse{
-    0%,100%{box-shadow:inset 0 0 0 1px rgba(91,140,255,.45)}
-    50%{box-shadow:inset 0 0 0 1px rgba(91,140,255,.75), 0 0 20px rgba(91,140,255,.25)}
-  }
-  .lb-rank{width:22px;flex:none;text-align:center;font-weight:700;color:var(--muted);font-size:12px}
-  .lb-rank.medal{font-size:16px}
-  .lb-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .lb-name em{font-style:normal;font-size:10px;font-weight:700;background:var(--accent);color:#fff;
-    padding:1px 5px;border-radius:99px;margin-left:5px;vertical-align:middle}
-  .lb-score{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:#9db4ff}
-
-  .lb-toggle{
-    margin-top:10px;
-    width:100%;
-    background:rgba(255,255,255,.05);
-    border:1px dashed rgba(255,255,255,.15);
-    color:#9db4ff;
-    font-size:12px;font-weight:600;
-    padding:7px 10px;border-radius:10px;
-    cursor:pointer;
-    font-family:inherit;
-    transition:background .2s,color .2s;
-  }
-  .lb-toggle:hover{background:rgba(255,255,255,.09);color:#c3ceff}
-  .lb-toggle.hidden{display:none}
-
-  .empty{color:#7b81ad;font-size:13px;text-align:center;padding:22px 8px}
 
   .upgrade-item{
     position:relative;overflow:hidden;
@@ -354,28 +277,45 @@
   .btn{
     border:0;border-radius:12px;padding:11px 16px;
     font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
-    transition:transform .06s,filter .15s,background .15s,box-shadow .2s;
+    transition:transform .12s,filter .15s,background .15s,box-shadow .2s;
   }
   .btn:active{transform:scale(.98)}
   .btn.primary{background:linear-gradient(160deg,var(--accent),var(--accent2));color:#fff}
   .btn.primary:hover{filter:brightness(1.08)}
   .btn.ghost{background:rgba(255,255,255,.07);color:var(--text)}
   .btn.ghost:hover{background:rgba(255,255,255,.11)}
-  .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700;position:relative;overflow:hidden}
-  .btn.gold::after{
-    content:'';position:absolute;inset:0;
-    background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.5) 50%,transparent 70%);
-    transform:translateX(-100%);
-    animation:shine 2.2s ease-in-out infinite;
-  }
-  @keyframes shine{
-    0%{transform:translateX(-100%)}
-    60%,100%{transform:translateX(100%)}
-  }
+  .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700}
   .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
 
-  .footer{text-align:center;color:#5f648c;font-size:12px;margin-top:22px}
+  /* ===== 排行榜浮动按钮 ===== */
+  .lb-fab{
+    position:fixed;
+    right:20px;bottom:20px;
+    width:60px;height:60px;
+    border-radius:50%;
+    border:0;
+    background:linear-gradient(160deg,var(--accent),var(--accent2));
+    color:#fff;
+    font-size:26px;line-height:1;
+    cursor:pointer;
+    z-index:200;
+    display:flex;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    will-change:transform;
+    transform:translateZ(0);
+    transition:transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease;
+    box-shadow:0 12px 28px -8px rgba(91,140,255,.7), inset 0 -3px 0 rgba(0,0,0,.2);
+  }
+  .lb-fab:hover{
+    transform:translateZ(0) translateY(-4px);
+    box-shadow:0 20px 36px -10px rgba(91,140,255,.9), inset 0 -3px 0 rgba(0,0,0,.2);
+  }
+  .lb-fab:active{
+    transform:translateZ(0) scale(.92);
+    transition-duration:.08s;
+  }
 
+  /* ===== 弹窗 ===== */
   .modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
   .modal.hidden{display:none}
   .modal-backdrop{position:absolute;inset:0;background:rgba(4,5,15,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -394,7 +334,7 @@
     font-size:24px;width:34px;height:34px;cursor:pointer;border-radius:9px;line-height:1;font-family:inherit}
   .modal-close:hover{background:rgba(255,255,255,.06);color:#fff}
   .modal-close.hidden{display:none}
-  .modal-title{font-size:17px;font-weight:700;margin:0 0 6px;text-align:center}
+  .modal-title{font-size:17px;font-weight:700;margin:0 0 14px;text-align:center}
   .modal-subtitle{text-align:center;font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.5}
 
   .tabs{display:flex;gap:5px;margin-bottom:16px;background:rgba(0,0,0,.28);padding:4px;border-radius:12px}
@@ -421,6 +361,41 @@
     color:#7be2a8;border-radius:10px;padding:9px 11px;font-size:13px;margin-bottom:11px}
   .auth-info.hidden{display:none}
   .auth-tip{margin:12px 0 0;font-size:12px;color:#6d739e;text-align:center;line-height:1.6}
+
+  /* ===== 排行榜列表 ===== */
+  .lb-list{
+    display:flex;flex-direction:column;gap:6px;
+    max-height:60vh;overflow-y:auto;
+    padding-right:4px;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(255,255,255,.15) transparent;
+  }
+  .lb-list::-webkit-scrollbar{width:5px}
+  .lb-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
+
+  .lb-row{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 10px;border-radius:10px;
+    background:rgba(255,255,255,.035);
+    font-size:13.5px;
+    animation:lbRowIn .35s ease backwards;
+  }
+  @keyframes lbRowIn{
+    from{opacity:0;transform:translateX(-8px)}
+    to{opacity:1;transform:none}
+  }
+  .lb-row.is-me{
+    background:linear-gradient(135deg,rgba(91,140,255,.18),rgba(91,140,255,.06));
+    box-shadow:inset 0 0 0 1px rgba(91,140,255,.45);
+  }
+  .lb-rank{width:24px;flex:none;text-align:center;font-weight:700;color:var(--muted);font-size:12px}
+  .lb-rank.medal{font-size:17px}
+  .lb-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb-name em{font-style:normal;font-size:10px;font-weight:700;background:var(--accent);color:#fff;
+    padding:1px 5px;border-radius:99px;margin-left:5px;vertical-align:middle}
+  .lb-score{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:#9db4ff}
+
+  .empty{color:#7b81ad;font-size:13px;text-align:center;padding:26px 8px}
 </style>
 </head>
 <body>
@@ -429,7 +404,7 @@
 
 <div class="wrap">
   <header>
-    <h1>⚡ 疯狂点击</h1>
+    <h1>Click the game</h1>
   </header>
 
   <div class="user-bar">
@@ -438,54 +413,54 @@
     <button id="userAction" class="btn ghost small" type="button">退出</button>
   </div>
 
-  <div class="layout">
-    <div class="main-col">
-      <section class="panel">
-        <div class="hud">
-          <div class="hud-item">
-            <span class="label">游玩时间</span>
-            <span class="val" id="timer">00:00</span>
-          </div>
-          <div class="hud-item">
-            <span class="label">累计点击</span>
-            <span class="val" id="count">0</span>
-          </div>
-          <div class="hud-item">
-            <span class="label">本次每秒</span>
-            <span class="val" id="cps">0.0</span>
-          </div>
-        </div>
-
-        <button id="clickBtn" class="click-btn" type="button">点我！</button>
-
-        <div class="status-bar">
-          <span class="status-chip" id="syncChip">
-            <span class="dot"></span>
-            <span id="syncChipText">等待登录…</span>
-          </span>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2 style="font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
-          ⚡ 升级 <span class="badge gold" id="upgradeBadge">0 / 5</span>
-        </h2>
-        <div id="upgradeList"></div>
-      </section>
+  <section class="panel">
+    <div class="hud">
+      <div class="hud-item">
+        <span class="label">游玩时间</span>
+        <span class="val" id="timer">00:00</span>
+      </div>
+      <div class="hud-item">
+        <span class="label">累计点击</span>
+        <span class="val" id="count">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="label">本次每秒</span>
+        <span class="val" id="cps">0.0</span>
+      </div>
     </div>
 
-    <aside class="side-col">
-      <section class="panel lb-panel">
-        <h2>🏆 排行榜 <span class="badge" id="lbBadge">加载中…</span></h2>
-        <div id="leaderboard"><div class="empty">加载中…</div></div>
-        <button id="lbToggle" class="lb-toggle hidden" type="button">展开全部 ▼</button>
-      </section>
-    </aside>
-  </div>
+    <button id="clickBtn" class="click-btn" type="button">点击</button>
 
-  <p class="footer">纯前端小游戏 · 托管于 GitHub Pages</p>
+    <div class="status-bar">
+      <span class="status-chip" id="syncChip">
+        <span class="dot"></span>
+        <span id="syncChipText">等待登录…</span>
+      </span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 style="font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+      ⚡ 升级 <span class="badge gold" id="upgradeBadge" style="margin-left:auto;">0 / 5</span>
+    </h2>
+    <div id="upgradeList"></div>
+  </section>
 </div>
 
+<!-- 排行榜浮动按钮 -->
+<button id="lbFab" class="lb-fab" type="button" title="排行榜" aria-label="排行榜">🏆</button>
+
+<!-- 排行榜弹窗 -->
+<div id="lbModal" class="modal hidden">
+  <div class="modal-backdrop" data-close-lb></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+    <button class="modal-close" type="button" data-close-lb aria-label="关闭">×</button>
+    <h3 class="modal-title" id="lbTitle">🏆 排行榜</h3>
+    <div id="leaderboard" class="lb-list"><div class="empty">加载中…</div></div>
+  </div>
+</div>
+
+<!-- 登录弹窗 -->
 <div id="authModal" class="modal hidden">
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -529,9 +504,6 @@
     POINT_PER_CLICKS: 10,
     SYNC_INTERVAL: 5000,
     LB_REFRESH_MS: 10 * 60 * 1000,
-    LB_PREVIEW: 3,
-    RIPPLE_THROTTLE: 70,
-
     SUPABASE_URL: 'https://ideuctxwohmwdbdtjyuh.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkZXVjdHh3b2htd2RiZHRqeXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MjE4MDUsImV4cCI6MjEwNTk5NzgwNX0.YPy9y6njWnU5J3ptf1rSKImAVfnAnUR1TbljOd2D-EE',
     EMAIL_DOMAIN: '@clicks.game'
@@ -539,7 +511,6 @@
 
   const AUTO_INTERVALS = [0, 2000, 1200, 800, 600, 400];
 
-  // 价格：5, 20, 80, 320, 1280
   const AUTOCLICK = {
     key: 'autoClick',
     icon: '🤖',
@@ -569,7 +540,7 @@
   const syncChip = $('syncChip'), syncChipText = $('syncChipText');
   const pointsBox = $('pointsBox'), pointsVal = $('pointsVal');
   const upgradeList = $('upgradeList'), upgradeBadge = $('upgradeBadge');
-  const lbEl = $('leaderboard'), lbBadge = $('lbBadge'), lbToggle = $('lbToggle');
+  const lbEl = $('leaderboard'), lbFab = $('lbFab'), lbModal = $('lbModal');
   const userText = $('userText'), userAction = $('userAction');
   const authModal = $('authModal'), authForm = $('authForm');
   const authUsername = $('authUsername'), authPassword = $('authPassword');
@@ -594,9 +565,7 @@
   let authMode = 'login';
   let submitting = false;
   let authForced = true;
-  let lbExpanded = false;
   let lbData = [];
-  let lastRippleAt = 0;
   let syncing = false;
 
   /* ================= 工具 ================= */
@@ -650,7 +619,7 @@
 
   /* ================= 背景粒子 ================= */
   function buildParticles() {
-    const count = window.innerWidth < 600 ? 10 : 18;
+    const count = window.innerWidth < 600 ? 8 : 14;
     let html = '';
     for (let i = 0; i < count; i++) {
       const size = 2 + Math.random() * 4;
@@ -668,29 +637,6 @@
   }
 
   /* ================= 动效 ================= */
-  function spawnRipple(e) {
-    const now = performance.now();
-    if (now - lastRippleAt < CONFIG.RIPPLE_THROTTLE) return;
-    lastRippleAt = now;
-
-    const rect = clickBtn.getBoundingClientRect();
-    let x, y;
-    if (e && e.clientX) {
-      x = e.clientX - rect.left;
-      y = e.clientY - rect.top;
-    } else {
-      x = rect.width / 2;
-      y = rect.height / 2;
-    }
-
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    clickBtn.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 750);
-  }
-
   function floatPoint() {
     const rect = clickBtn.getBoundingClientRect();
     const el = document.createElement('div');
@@ -714,7 +660,6 @@
   /* ================= Profile ================= */
   async function loadProfile() {
     if (!sb || !currentUser) return null;
-    // 用 select('*') 避免因字段不存在而失败
     const { data, error } = await sb
       .from('profiles')
       .select('*')
@@ -723,7 +668,6 @@
     if (error) { console.warn('加载 profile 失败', error); return null; }
     if (!data) return null;
 
-    // 规范化字段
     data.points = Number(data.points) || 0;
     data.total_clicks = Number(data.total_clicks) || 0;
     if (!data.upgrades || typeof data.upgrades !== 'object') {
@@ -739,7 +683,6 @@
     let p = await loadProfile();
 
     if (p) {
-      // 如果 upgrades 里还没有 autoClick，尝试补一下（失败也不影响游戏）
       if (!p.upgrades || p.upgrades.autoClick === undefined) {
         const cleaned = Object.assign({}, p.upgrades || {}, { autoClick: 0 });
         const { error } = await sb.from('profiles')
@@ -750,7 +693,6 @@
       return p;
     }
 
-    // 没 profile → 创建
     const { error } = await sb.from('profiles')
       .insert({ id: currentUser.id, points: 0, total_clicks: 0, upgrades: defaultUpgrades() });
     if (error) console.warn('创建 profile 失败', error);
@@ -810,7 +752,6 @@
       currentProfile.total_clicks = Number(res.total_clicks) || 0;
       currentProfile.points = Number(res.points) || 0;
 
-      // 只更新数字，不重建整个面板（避免闪烁）
       pointsVal.textContent = currentProfile.points;
       countEl.textContent = currentProfile.total_clicks;
       renderUpgradeList();
@@ -826,7 +767,7 @@
   }
 
   /* ================= 核心点击 ================= */
-  function doClick(e, auto) {
+  function doClick(auto) {
     if (!currentUser || !currentProfile) return;
 
     const prev = currentProfile.total_clicks || 0;
@@ -849,9 +790,6 @@
       renderUpgradeList();
     }
 
-    if (auto) spawnRipple(null);
-    else if (e) spawnRipple(e);
-
     if (navigator.vibrate && !auto) {
       try { navigator.vibrate(5); } catch (err) {}
     }
@@ -865,7 +803,7 @@
 
     autoClickTimer = setInterval(() => {
       if (!currentUser || !currentProfile) return;
-      doClick(null, true);
+      doClick(true);
     }, AUTO_INTERVALS[lv]);
   }
 
@@ -896,12 +834,9 @@
 
   function renderLeaderboard(list) {
     lbData = list || [];
-    const total = lbData.length;
 
-    if (!total) {
+    if (!lbData.length) {
       lbEl.innerHTML = '<div class="empty">还没有记录</div>';
-      lbEl.classList.remove('lb-expanded');
-      lbToggle.classList.add('hidden');
       return;
     }
 
@@ -912,52 +847,42 @@
       const rank = i + 1;
       const mark = rank <= 3 ? medals[rank - 1] : rank;
       const isMe = myId && it.user_id === myId;
-      const isExtra = rank > CONFIG.LB_PREVIEW;
 
-      return '<div class="lb-row'
-        + (isMe ? ' is-me' : '')
-        + (isExtra ? ' extra' : '')
-        + '" style="animation-delay:' + (i * 30) + 'ms">'
+      return '<div class="lb-row' + (isMe ? ' is-me' : '') + '" style="animation-delay:' + (i * 30) + 'ms">'
         + '<span class="lb-rank' + (rank <= 3 ? ' medal' : '') + '">' + mark + '</span>'
         + '<span class="lb-name">' + escapeHtml(it.name) + (isMe ? '<em>我</em>' : '') + '</span>'
         + '<span class="lb-score">' + it.score + '</span>'
         + '</div>';
     }).join('');
-
-    lbEl.classList.toggle('lb-expanded', lbExpanded);
-
-    if (total > CONFIG.LB_PREVIEW) {
-      lbToggle.classList.remove('hidden');
-      lbToggle.textContent = lbExpanded ? '收起 ▲' : '展开全部（' + total + ' 名）▼';
-    } else {
-      lbToggle.classList.add('hidden');
-    }
   }
 
   async function refreshLeaderboard() {
     if (!sb) {
-      lbBadge.textContent = '离线';
-      lbBadge.className = 'badge warn';
       renderLeaderboard([]);
       return;
     }
     try {
       const rows = await fetchLeaderboard();
-      lbBadge.textContent = '云端';
-      lbBadge.className = 'badge cloud';
       renderLeaderboard(rows);
     } catch (err) {
       console.warn('排行榜加载失败', err);
-      lbBadge.textContent = '加载失败';
-      lbBadge.className = 'badge warn';
       lbEl.innerHTML = '<div class="empty">加载失败</div>';
-      lbToggle.classList.add('hidden');
     }
   }
 
-  lbToggle.addEventListener('click', function () {
-    lbExpanded = !lbExpanded;
-    renderLeaderboard(lbData);
+  function openLbModal() {
+    lbModal.classList.remove('hidden');
+    refreshLeaderboard();
+  }
+
+  function closeLbModal() {
+    lbModal.classList.add('hidden');
+  }
+
+  lbFab.addEventListener('click', openLbModal);
+
+  lbModal.addEventListener('click', function (e) {
+    if (e.target.closest('[data-close-lb]')) closeLbModal();
   });
 
   /* ================= 升级面板 ================= */
@@ -1085,7 +1010,7 @@
     purchaseUpgrade(btn.dataset.buy);
   });
 
-  /* ================= 弹窗 ================= */
+  /* ================= 登录弹窗 ================= */
   function openAuthModal(mode, forced) {
     if (!sb) return;
     authForced = !!forced;
@@ -1201,18 +1126,29 @@
     if (!currentUser) { openAuthModal('login', true); return; }
     if (!currentProfile) return;
 
-    doClick(e, false);
+    doClick(false);
   });
 
   document.addEventListener('keydown', function (e) {
+    // Escape 关闭排行榜弹窗
+    if (e.key === 'Escape') {
+      if (!lbModal.classList.contains('hidden')) { closeLbModal(); return; }
+      if (!authModal.classList.contains('hidden')) {
+        if (authForced && !currentUser) return;
+        closeAuthModal();
+        return;
+      }
+    }
+
     if (e.code !== 'Space' && e.code !== 'Enter') return;
     if (e.repeat) return;
     if (!authModal.classList.contains('hidden')) return;
+    if (!lbModal.classList.contains('hidden')) return;
     if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (!currentUser || !currentProfile) return;
 
     e.preventDefault();
-    doClick(null, false);
+    doClick(false);
   });
 
   userAction.addEventListener('click', function () {
@@ -1228,13 +1164,6 @@
     if (!e.target.closest('[data-close]')) return;
     if (authForced && !currentUser) return;
     closeAuthModal();
-  });
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && !authModal.classList.contains('hidden')) {
-      if (authForced && !currentUser) return;
-      closeAuthModal();
-    }
   });
 
   document.addEventListener('visibilitychange', function () {
@@ -1310,9 +1239,6 @@
 
     if (!sb) {
       userText.textContent = '云端不可用';
-      lbBadge.textContent = '离线';
-      lbBadge.className = 'badge warn';
-      lbEl.innerHTML = '<div class="empty">无法连接</div>';
       return;
     }
 
