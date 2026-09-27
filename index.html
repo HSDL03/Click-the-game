@@ -27,6 +27,37 @@
   input{-webkit-user-select:text;user-select:text}
   .wrap{width:100%;max-width:720px;position:relative;z-index:1}
 
+  /* ===== 返回小站按钮 ===== */
+  .back-home{
+    position:fixed;
+    top:16px;left:16px;
+    z-index:10001;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 14px;
+    font-size:13px;font-weight:700;
+    font-family:inherit;
+    color:var(--text);
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:10px;
+    text-decoration:none;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .15s, background .2s, border-color .2s;
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  .back-home:hover{
+    background:rgba(255,255,255,.13);
+    border-color:rgba(91,140,255,.5);
+    transform:translateY(-2px);
+  }
+  .back-home:active{
+    transform:scale(.96);
+    transition-duration:.06s;
+  }
+  .back-home .arrow{font-size:14px;line-height:1}
+
   .bg-particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
   .bg-particles i{
     position:absolute;display:block;border-radius:50%;
@@ -120,6 +151,7 @@
     transition-duration:.06s;filter:brightness(.94);
     box-shadow:0 8px 16px -8px rgba(91,124,255,.6), inset 0 -1px 0 rgba(0,0,0,.22);
   }
+  .click-btn.cooldown{filter:brightness(.9) saturate(.9)}
 
   .status-bar{margin-top:12px;display:flex;align-items:center;font-size:13px}
   .status-chip{
@@ -426,6 +458,12 @@
 </head>
 <body>
 
+<!-- 返回小站按钮（固定在左上角，始终可见） -->
+<a class="back-home" href="https://hsdl03.github.io/HStool/index.html" title="返回红石的小站">
+  <span class="arrow">←</span>
+  <span>返回小站</span>
+</a>
+
 <div class="bg-particles" id="bgParticles"></div>
 
 <div class="wrap">
@@ -602,20 +640,13 @@
     POINT_PER_CLICKS: 10,
     SYNC_INTERVAL: 5000,
     LB_REFRESH_MS: 10 * 60 * 1000,
+    CLICK_COOLDOWN: 100,
     SUPABASE_URL: 'https://ideuctxwohmwdbdtjyuh.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkZXVjdHh3b2htd2RiZHRqeXVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MjE4MDUsImV4cCI6MjEwNTk5NzgwNX0.YPy9y6njWnU5J3ptf1rSKImAVfnAnUR1TbljOd2D-EE',
     EMAIL_DOMAIN: '@clicks.game',
     OWNER_NAME: '红石a'
   };
 
-  /* ============================================================
-   *  升级定义
-   *
-   *  核心公式：
-   *    每次自动点击获得的点击数 = 底数 × 倍率
-   *    底数 = 1 + 底数等级  (等级0→1, 等级10→11)
-   *    倍率 = 1 + 倍率等级  (等级0→1, 等级100→101)
-   * ============================================================ */
   const BUILTIN_UPGRADES = [
     {
       key: 'autoClick',
@@ -679,6 +710,8 @@
     }
   ];
 
+  const REQUIRED_KEYS = ['autoClick', 'autoBase', 'autoMultiplier'];
+
   let upgradeDefs = BUILTIN_UPGRADES.slice();
 
   let sb = null;
@@ -727,6 +760,9 @@
   let pendingClicks = 0;
   let pendingSeconds = 0;
 
+  let lastClickAt = 0;
+  let cooldownTimer = null;
+
   let uiTimer = null;
   let syncTimer = null;
   let lbTimer = null;
@@ -742,11 +778,9 @@
   let syncing = false;
 
   let isOP = false;
-  let opAutoOpenedThisSession = false;
 
   const LS_USERNAME = 'clickChallenge.username.v1';
 
-  /* ================= 工具 ================= */
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => (
       { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
@@ -832,7 +866,6 @@
     toast._t = setTimeout(() => opToast.classList.remove('show'), ms || 1800);
   }
 
-  /* ================= 错误翻译 ================= */
   function translateError(err, fallback) {
     if (!err) return fallback || '操作失败';
     if (err.isNetworkFail) return '网络异常，请稍后重试';
@@ -862,7 +895,6 @@
     return fallback || '操作失败，请稍后重试';
   }
 
-  /* ================= 网络重试 ================= */
   function isNetworkError(err) {
     if (!err) return false;
     if (err.isNetworkFail) return true;
@@ -955,7 +987,6 @@
     netStatusEl.classList.remove('show', 'checking', 'ok', 'fail');
   }
 
-  /* ================= 升级配置 ================= */
   function validateUpgradeDef(u) {
     if (!u || typeof u !== 'object') return false;
     if (!u.key || typeof u.key !== 'string') return false;
@@ -963,6 +994,28 @@
     if (typeof u.maxLevel !== 'number' || u.maxLevel < 1) return false;
     if (!u.cost || typeof u.cost !== 'object') return false;
     return true;
+  }
+
+  function mergeWithRequired(externalList) {
+    const result = externalList.slice();
+    const existingKeys = new Set(result.map(u => u.key));
+
+    for (const builtin of BUILTIN_UPGRADES) {
+      if (REQUIRED_KEYS.includes(builtin.key) && !existingKeys.has(builtin.key)) {
+        result.push(builtin);
+        console.warn('[升级配置] 外部配置缺少 "' + builtin.key + '"，已自动补上内置版本');
+      }
+    }
+
+    const orderMap = {};
+    BUILTIN_UPGRADES.forEach((u, i) => { orderMap[u.key] = i; });
+    result.sort((a, b) => {
+      const ai = orderMap[a.key] === undefined ? 999 : orderMap[a.key];
+      const bi = orderMap[b.key] === undefined ? 999 : orderMap[b.key];
+      return ai - bi;
+    });
+
+    return result;
   }
 
   async function loadUpgradeConfig() {
@@ -983,17 +1036,17 @@
       const valid = list.filter(validateUpgradeDef);
       if (!valid.length) throw new Error('没有有效的升级项');
 
-      upgradeDefs = valid;
-      console.log('[升级配置] 已加载 ' + valid.length + ' 项');
+      upgradeDefs = mergeWithRequired(valid);
+      console.log('[升级配置] 加载成功，共 ' + upgradeDefs.length + ' 项：'
+        + upgradeDefs.map(u => u.key).join(', '));
       return true;
     } catch (e) {
-      console.warn('[升级配置] 加载失败，使用内置配置');
+      console.warn('[升级配置] 加载失败（' + e.message + '），使用内置配置');
       upgradeDefs = BUILTIN_UPGRADES.slice();
       return false;
     }
   }
 
-  /* ================= 升级引擎 ================= */
   function findDef(key) { return upgradeDefs.find(u => u.key === key); }
 
   function getUpgradeLevel(key) {
@@ -1038,11 +1091,11 @@
         break;
       }
       case 'autoClickBase': {
-        value = 1 + level;   // 底数 = 1 + 等级
+        value = 1 + level;
         break;
       }
       case 'autoClickMultiplier': {
-        value = 1 + level;   // 倍率 = 1 + 等级
+        value = 1 + level;
         break;
       }
     }
@@ -1065,26 +1118,22 @@
     return arr[Math.min(found.level, arr.length - 1)] || null;
   }
 
-  // 底数 = 1 + 底数等级
   function engineGetAutoBase() {
     const found = findEffect('autoClickBase');
     if (!found) return 1;
     return 1 + found.level;
   }
 
-  // 倍率 = 1 + 倍率等级
   function engineGetAutoMultiplier() {
     const found = findEffect('autoClickMultiplier');
     if (!found) return 1;
     return 1 + found.level;
   }
 
-  // 核心公式：每次自动点击获得的点击数 = 底数 × 倍率
   function engineGetAutoClickPerTick() {
     return engineGetAutoBase() * engineGetAutoMultiplier();
   }
 
-  /* ================= 解锁 ================= */
   function isUnlocked(def) {
     const u = def.unlock;
     if (!u) return true;
@@ -1106,7 +1155,6 @@
     return '未解锁';
   }
 
-  /* ================= 背景 ================= */
   function buildParticles() {
     const count = window.innerWidth < 600 ? 8 : 14;
     let html = '';
@@ -1142,7 +1190,6 @@
     el.classList.add('bump');
   }
 
-  /* ================= Profile ================= */
   function normalizeProfile(data) {
     if (!data) return null;
     data.points = Number(data.points) || 0;
@@ -1210,18 +1257,14 @@
     }
   }
 
-  /* ================= OP ================= */
   function detectOP() {
     const name = usernameOf(currentUser);
     isOP = (name === CONFIG.OWNER_NAME);
     opBtn.classList.toggle('show', isOP);
 
     if (isOP) {
-      console.log('%c[OP] 检测到主人身份：' + name, 'color:#ffcc66;font-weight:bold;font-size:14px');
-      if (!opAutoOpenedThisSession) {
-        opAutoOpenedThisSession = true;
-        setTimeout(() => openOpModal(), 700);
-      }
+      console.log('%c[OP] 检测到主人身份：' + name + '（点击右上角 OP 按钮打开菜单）',
+        'color:#ffcc66;font-weight:bold;font-size:14px');
     } else {
       opModal.classList.add('hidden');
     }
@@ -1373,7 +1416,6 @@
     });
   }
 
-  /* ================= 同步 ================= */
   function setSyncChip(text, ok) {
     syncChipText.textContent = text;
     syncChip.classList.toggle('on', !!ok);
@@ -1427,14 +1469,10 @@
     }
   }
 
-  /* ================= 核心点击 ================= */
   function doClick(auto) {
     if (!currentUser || !currentProfile) return;
 
     const prev = currentProfile.total_clicks || 0;
-
-    // 手动点击 +1
-    // 自动点击 = 底数 × 倍率
     const addClicks = auto ? engineGetAutoClickPerTick() : 1;
     const next = prev + addClicks;
 
@@ -1462,7 +1500,23 @@
     }
   }
 
-  /* ================= 自动点击 ================= */
+  function tryManualClick() {
+    if (!currentUser) { openAuthModal('login', true); return; }
+    if (!currentProfile) return;
+
+    const now = performance.now();
+    if (now - lastClickAt < CONFIG.CLICK_COOLDOWN) return;
+
+    lastClickAt = now;
+    doClick(false);
+
+    clickBtn.classList.add('cooldown');
+    clearTimeout(cooldownTimer);
+    cooldownTimer = setTimeout(() => {
+      clickBtn.classList.remove('cooldown');
+    }, CONFIG.CLICK_COOLDOWN);
+  }
+
   function startAutoClick() {
     stopAutoClick();
     const interval = engineGetAutoClickInterval();
@@ -1484,7 +1538,6 @@
     if (interval !== autoClickIntervalMs) startAutoClick();
   }
 
-  /* ================= 在线时长 ================= */
   function startPlayTimer() {
     stopPlayTimer();
     playTimer = setInterval(() => {
@@ -1499,7 +1552,6 @@
     if (playTimer) { clearInterval(playTimer); playTimer = null; }
   }
 
-  /* ================= HUD ================= */
   function updateHud() {
     const elapsed = Date.now() - sessionStart;
     timerEl.textContent = formatTime(elapsed);
@@ -1508,7 +1560,6 @@
     }
   }
 
-  /* ================= 排行榜 ================= */
   async function fetchLeaderboard(type) {
     if (!sb) throw new Error('云端不可用');
     const { data, error } = await withRetry(
@@ -1599,7 +1650,6 @@
     if (e.target.closest('[data-close-lb]')) closeLbModal();
   });
 
-  /* ================= 升级面板 ================= */
   function totalUpgradeLevel() {
     let sum = 0;
     for (const def of upgradeDefs) sum += getUpgradeLevel(def.key);
@@ -1756,7 +1806,6 @@
     purchaseUpgrade(btn.dataset.buy);
   });
 
-  /* ================= 登录 ================= */
   function openAuthModal(mode, forced) {
     if (!sb) return;
     authForced = !!forced;
@@ -1918,7 +1967,6 @@
     await sb.auth.signOut();
   }
 
-  /* ================= 登录界面交互 ================= */
   pwToggle.addEventListener('click', function () {
     const isPw = authPassword.type === 'password';
     authPassword.type = isPw ? 'text' : 'password';
@@ -1965,12 +2013,10 @@
     showAuthInfo('本站用"用户名+密码"注册，没有邮箱，无法自助找回。请联系管理员重置。');
   });
 
-  /* ================= 事件 ================= */
   clickBtn.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    if (!currentUser) { openAuthModal('login', true); return; }
-    if (!currentProfile) return;
-    doClick(false);
+    e.preventDefault();
+    tryManualClick();
   });
 
   document.addEventListener('keydown', function (e) {
@@ -1993,7 +2039,7 @@
     if (!currentUser || !currentProfile) return;
 
     e.preventDefault();
-    doClick(false);
+    tryManualClick();
   });
 
   userAction.addEventListener('click', function () {
@@ -2016,7 +2062,6 @@
     else refreshLeaderboard(lbType);
   });
 
-  /* ================= 认证状态 ================= */
   async function onSignedIn(session) {
     currentUser = session.user;
     renderUserBar();
@@ -2036,6 +2081,7 @@
 
     sessionStart = Date.now();
     sessionClicks = 0;
+    lastClickAt = 0;
 
     closeAuthModal();
 
@@ -2063,7 +2109,7 @@
     pendingClicks = 0;
     pendingSeconds = 0;
     isOP = false;
-    opAutoOpenedThisSession = false;
+    lastClickAt = 0;
 
     opBtn.classList.remove('show');
 
@@ -2084,7 +2130,6 @@
     openAuthModal('login', true);
   }
 
-  /* ================= 初始化 ================= */
   async function init() {
     buildParticles();
     renderUserBar();
