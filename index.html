@@ -159,7 +159,7 @@
     background:rgba(255,255,255,.035);
     border:1px solid rgba(255,255,255,.06);
     border-radius:14px;padding:14px;margin-bottom:10px;
-    transition:border-color .25s,background .25s;
+    transition:border-color .25s,background .25s,opacity .25s;
   }
   .upgrade-item:last-child{margin-bottom:0}
   .upgrade-item.is-max{
@@ -170,6 +170,12 @@
     border-color:rgba(91,140,255,.38);
     background:linear-gradient(135deg,rgba(91,140,255,.11),rgba(91,140,255,.02));
   }
+  .upgrade-item.locked{
+    opacity:.5;
+    background:rgba(255,255,255,.015);
+    border-color:rgba(255,255,255,.04);
+  }
+  .upgrade-item.locked .upgrade-icon{filter:grayscale(1)}
   .upgrade-item.flash::after{
     content:'';position:absolute;inset:0;
     background:radial-gradient(circle,rgba(255,204,102,.6),transparent 70%);
@@ -192,6 +198,7 @@
   .upgrade-info h4{margin:0 0 3px;font-size:15px;font-weight:700}
   .upgrade-info p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
   .upgrade-effect{display:block;font-size:12px;color:#9db4ff;margin-top:5px;font-weight:600}
+  .upgrade-item.locked .upgrade-effect{color:#ffb066}
 
   .upgrade-lv{display:flex;gap:4px;flex:none;margin-top:6px;align-items:center}
   .upgrade-lv i{
@@ -376,7 +383,6 @@
   }
   .op-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  /* ===== 登录界面增强 ===== */
   .pw-wrap{position:relative}
   .pw-wrap input{padding-right:44px}
   .pw-toggle{
@@ -513,7 +519,6 @@
 
 <button id="lbFab" class="lb-fab" type="button" title="排行榜" aria-label="排行榜">🏆</button>
 
-<!-- 排行榜 -->
 <div id="lbModal" class="modal hidden">
   <div class="modal-backdrop" data-close-lb></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
@@ -530,7 +535,6 @@
   </div>
 </div>
 
-<!-- OP 菜单 -->
 <div id="opModal" class="modal hidden">
   <div class="modal-backdrop" data-close-op></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
@@ -577,7 +581,6 @@
   </div>
 </div>
 
-<!-- 登录弹窗（增强版） -->
 <div id="authModal" class="modal hidden">
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
@@ -590,7 +593,6 @@
       <button class="tab" type="button" data-tab="register">注册</button>
     </div>
 
-    <!-- 网络诊断 -->
     <div id="netStatus" class="net-status">
       <span class="net-icon" id="netIcon">📡</span>
       <span id="netText">正在检测连接…</span>
@@ -652,6 +654,9 @@
     OWNER_NAME: '红石a'
   };
 
+  /* ============================================================
+   *  升级定义
+   * ============================================================ */
   const BUILTIN_UPGRADES = [
     {
       key: 'autoClick',
@@ -667,11 +672,36 @@
       }
     },
     {
+      key: 'autoBase',
+      icon: '🔢',
+      name: '自动点击[底数]',
+      desc: '提升每次自动点击的底数',
+      maxLevel: 10,
+      unlock: {
+        type: 'upgradeLevel',
+        key: 'autoClick',
+        level: 1,
+        hint: '需要自动点击[速度] 1 级'
+      },
+      cost: { type: 'exponential', base: 5, growth: 4 },
+      effect: {
+        type: 'autoClickBase',
+        params: {},
+        texts: { empty: '底数 = 1', value: '底数 = {value}' }
+      }
+    },
+    {
       key: 'autoMultiplier',
       icon: '💥',
       name: '自动点击[倍率]',
-      desc: '每次自动点击附加额外点击',
+      desc: '提升每次自动点击的倍率',
       maxLevel: 100,
+      unlock: {
+        type: 'upgradeLevel',
+        key: 'autoClick',
+        level: 2,
+        hint: '需要自动点击[速度] 2 级'
+      },
       cost: {
         type: 'segmented',
         base: 100,
@@ -685,7 +715,7 @@
       effect: {
         type: 'autoClickMultiplier',
         params: {},
-        texts: { empty: '尚未解锁', value: '每次自动点击 ×{value}' }
+        texts: { empty: '倍率 = 1', value: '倍率 = {value}' }
       }
     }
   ];
@@ -723,7 +753,6 @@
   const tabBtns = authModal.querySelectorAll('.tab[data-tab]');
   const bgParticles = $('bgParticles');
 
-  // 登录增强元素
   const netStatusEl = $('netStatus');
   const netIconEl = $('netIcon');
   const netTextEl = $('netText');
@@ -846,8 +875,48 @@
     toast._t = setTimeout(() => opToast.classList.remove('show'), ms || 1800);
   }
 
-  /* ================= 网络重试包装 ================= */
-  // 判断是否网络层错误（值得重试）
+  /* ============================================================
+   *  错误翻译（统一转中文）
+   * ============================================================ */
+  function translateError(err, fallback) {
+    if (!err) return fallback || '操作失败';
+
+    if (err.isNetworkFail) return '网络异常，请稍后重试';
+    if (err.name === 'AbortError') return '请求超时，请稍后重试';
+
+    const raw = String(err.message || err.error_description || err.msg || err.details || '');
+    if (!raw) return fallback || '操作失败';
+
+    // 已是中文 → 直接返回
+    if (/[\u4e00-\u9fa5]/.test(raw)) return raw;
+
+    // 常见 Supabase / PostgreSQL 错误
+    if (/Failed to fetch|NetworkError|Load failed|fetch failed|Network request failed/i.test(raw)) {
+      return '无法连接服务器，请检查网络后重试';
+    }
+    if (/Invalid login credentials/i.test(raw)) return '用户名或密码错误';
+    if (/Email not confirmed/i.test(raw)) return '邮箱未确认，请联系管理员';
+    if (/User already registered/i.test(raw)) return '该用户名已被注册';
+    if (/Password should be at least/i.test(raw)) return '密码太短，至少 6 位';
+    if (/Unable to validate email/i.test(raw)) return '用户名格式无法识别';
+    if (/signup.*disabled/i.test(raw)) return '注册功能已关闭';
+    if (/rate limit|too many requests|too many/i.test(raw)) return '操作太频繁，请稍后再试';
+    if (/permission denied/i.test(raw)) return '权限不足';
+    if (/row-level security|RLS/i.test(raw)) return '权限校验失败';
+    if (/JWT expired|invalid jwt/i.test(raw)) return '登录状态已过期，请重新登录';
+    if (/duplicate key|already exists/i.test(raw)) return '记录已存在';
+    if (/violates.*constraint|invalid input/i.test(raw)) return '数据不符合规则';
+    if (/does not exist/i.test(raw)) return '数据不存在';
+    if (/function .* does not exist/i.test(raw)) return '服务端接口不存在，请联系管理员';
+    if (/timeout|timed out/i.test(raw)) return '请求超时，请稍后重试';
+    if (/internal server error|server error/i.test(raw)) return '服务器错误，请稍后重试';
+    if (/bad gateway|service unavailable/i.test(raw)) return '服务暂时不可用，请稍后重试';
+
+    // 剩余情况：返回 fallback，避免暴露英文
+    return fallback || '操作失败，请稍后重试';
+  }
+
+  /* ================= 网络重试 ================= */
   function isNetworkError(err) {
     if (!err) return false;
     if (err.isNetworkFail) return true;
@@ -859,7 +928,6 @@
     );
   }
 
-  // 自动重试包装器
   async function withRetry(fn, options) {
     const opts = options || {};
     const retries = (opts.retries === undefined) ? 2 : opts.retries;
@@ -874,8 +942,8 @@
       } catch (err) {
         lastErr = err;
 
-        if (!isNetworkError(err)) throw err;      // 业务错误，不重试
-        if (attempt === retries) break;           // 重试次数用完
+        if (!isNetworkError(err)) throw err;
+        if (attempt === retries) break;
 
         const delay = delays[Math.min(attempt, delays.length - 1)];
         console.warn('[' + label + '] 网络失败，' + delay + 'ms 后重试（第 ' + (attempt + 1) + '/' + retries + ' 次）');
@@ -883,14 +951,12 @@
       }
     }
 
-    // 全部失败
-    const e = new Error('NETWORK_FAIL: 无法连接服务器，请检查网络后重试');
+    const e = new Error('网络异常，请稍后重试');
     e.isNetworkFail = true;
     e.originalError = lastErr;
     throw e;
   }
 
-  // 连接诊断（用于登录界面）
   async function checkConnection(silent) {
     if (!sb) {
       showNet('fail', '云端未初始化，请刷新页面');
@@ -913,7 +979,6 @@
 
       const ms = Date.now() - t0;
 
-      // 只要服务器有响应（任意状态码）即视为网络通
       if (res.ok || res.status === 401 || res.status === 404 || res.status === 400) {
         if (!silent) showNet('ok', '连接正常 · 延迟 ' + ms + 'ms');
         return true;
@@ -1031,6 +1096,10 @@
         sec = (value / 1000).toFixed(1);
         break;
       }
+      case 'autoClickBase': {
+        value = 1 + level;
+        break;
+      }
       case 'autoClickMultiplier': {
         value = 1 + level;
         break;
@@ -1055,10 +1124,46 @@
     return arr[Math.min(found.level, arr.length - 1)] || null;
   }
 
-  function engineGetAutoClickMultiplier() {
-    const found = findEffect('autoClickMultiplier');
-    if (!found || found.level <= 0) return 1;
+  // 底数值：等级 0 → 1；等级 n → 1 + n
+  function engineGetAutoBase() {
+    const found = findEffect('autoClickBase');
+    if (!found) return 1;
     return 1 + found.level;
+  }
+
+  // 倍率值：等级 0 → 1；等级 n → 1 + n
+  function engineGetAutoMultiplier() {
+    const found = findEffect('autoClickMultiplier');
+    if (!found) return 1;
+    return 1 + found.level;
+  }
+
+  // 每次自动点击获得的点击数 = 底数 × 倍率
+  function engineGetAutoClickPerTick() {
+    return engineGetAutoBase() * engineGetAutoMultiplier();
+  }
+
+  /* ================= 解锁逻辑 ================= */
+  function isUnlocked(def) {
+    const u = def.unlock;
+    if (!u) return true;
+
+    if (u.type === 'upgradeLevel') {
+      return getUpgradeLevel(u.key) >= (u.level || 1);
+    }
+    return true;
+  }
+
+  function getUnlockHint(def) {
+    const u = def.unlock;
+    if (!u) return '';
+    if (u.hint) return u.hint;
+    if (u.type === 'upgradeLevel') {
+      const target = findDef(u.key);
+      const name = target ? target.name : u.key;
+      return '需要 ' + name + ' ' + (u.level || 1) + ' 级';
+    }
+    return '未解锁';
   }
 
   /* ================= 背景粒子 ================= */
@@ -1168,7 +1273,7 @@
     }
   }
 
-  /* ================= OP 检测 ================= */
+  /* ================= OP ================= */
   function detectOP() {
     const name = usernameOf(currentUser);
     isOP = (name === CONFIG.OWNER_NAME);
@@ -1208,7 +1313,6 @@
     }).join('');
   }
 
-  /* ================= OP 操作 ================= */
   async function opApply(points, clicks, seconds, upgrades) {
     if (!isOP || !sb || !currentUser) return false;
 
@@ -1227,7 +1331,7 @@
 
       if (error) {
         console.warn('[OP] 操作失败', error);
-        toast('失败：' + (error.message || '未知错误'));
+        toast('失败：' + translateError(error, '未知错误'));
         return false;
       }
 
@@ -1238,7 +1342,7 @@
           not_op: '你没有 OP 权限',
           profile_not_found: '数据异常'
         };
-        toast(msgs[res.error] || ('失败：' + res.error));
+        toast(msgs[res.error] || ('失败：' + (res.error || '未知错误')));
         return false;
       }
 
@@ -1252,8 +1356,8 @@
       }
       return true;
     } catch (err) {
-      console.warn('[OP] 网络失败', err);
-      toast(err.isNetworkFail ? '网络错误，请稍后重试' : ('失败：' + err.message));
+      console.warn('[OP] 失败', err);
+      toast(translateError(err, '操作失败，请稍后重试'));
       return false;
     }
   }
@@ -1397,7 +1501,9 @@
     if (!currentUser || !currentProfile) return;
 
     const prev = currentProfile.total_clicks || 0;
-    const addClicks = auto ? engineGetAutoClickMultiplier() : 1;
+    // 手动：+1
+    // 自动：底数 × 倍率
+    const addClicks = auto ? engineGetAutoClickPerTick() : 1;
     const next = prev + addClicks;
 
     currentProfile.total_clicks = next;
@@ -1446,7 +1552,7 @@
     if (interval !== autoClickIntervalMs) startAutoClick();
   }
 
-  /* ================= 在线时长计时 ================= */
+  /* ================= 在线时长 ================= */
   function startPlayTimer() {
     stopPlayTimer();
     playTimer = setInterval(() => {
@@ -1580,23 +1686,37 @@
 
     upgradeList.innerHTML = upgradeDefs.map(def => {
       const level = getUpgradeLevel(def.key);
-      const isMax = level >= def.maxLevel;
-      const cost = isMax ? 0 : calcCost(def, level);
-      const canBuy = !isMax && pts >= cost;
-      const poor = !isMax && pts < cost;
-      const eff = effectText(def, level);
+      const unlocked = isUnlocked(def);
+      const isMax = unlocked && level >= def.maxLevel;
+      const cost = (unlocked && !isMax) ? calcCost(def, level) : 0;
+      const canBuy = unlocked && !isMax && pts >= cost;
+      const poor = unlocked && !isMax && pts < cost;
 
-      let lvHtml;
-      if (def.maxLevel <= 10) {
-        lvHtml = Array.from({ length: def.maxLevel }, (_, i) =>
-          '<i class="' + (i < level ? 'on' : '') + '"></i>'
-        ).join('');
+      // 效果文本：未解锁时显示解锁提示
+      let eff;
+      if (!unlocked) {
+        eff = '🔒 ' + getUnlockHint(def);
       } else {
-        lvHtml = '<span class="upgrade-level-text">' + level + ' / ' + def.maxLevel + '</span>';
+        eff = effectText(def, level);
+      }
+
+      let lvHtml = '';
+      if (unlocked) {
+        if (def.maxLevel <= 10) {
+          lvHtml = Array.from({ length: def.maxLevel }, (_, i) =>
+            '<i class="' + (i < level ? 'on' : '') + '"></i>'
+          ).join('');
+        } else {
+          lvHtml = '<span class="upgrade-level-text">' + level + ' / ' + def.maxLevel + '</span>';
+        }
+      } else {
+        lvHtml = '<span class="upgrade-level-text" style="opacity:.6">🔒</span>';
       }
 
       let btnHtml;
-      if (isMax) {
+      if (!unlocked) {
+        btnHtml = '<button class="btn ghost" disabled>未解锁</button>';
+      } else if (isMax) {
         btnHtml = '<button class="btn ghost" disabled>已满级</button>';
       } else if (canBuy) {
         btnHtml = '<button class="btn gold" data-buy="' + def.key + '">升级</button>';
@@ -1604,7 +1724,12 @@
         btnHtml = '<button class="btn ghost" disabled>点数不足</button>';
       }
 
-      return '<div class="upgrade-item' + (isMax ? ' is-max' : (canBuy ? ' can-buy' : '')) + '" data-key="' + def.key + '">'
+      let cls = 'upgrade-item';
+      if (!unlocked) cls += ' locked';
+      else if (isMax) cls += ' is-max';
+      else if (canBuy) cls += ' can-buy';
+
+      return '<div class="' + cls + '" data-key="' + def.key + '">'
         + '<div class="upgrade-head">'
         +   '<div class="upgrade-icon">' + (def.icon || '⚡') + '</div>'
         +   '<div class="upgrade-info">'
@@ -1616,7 +1741,7 @@
         + '</div>'
         + '<div class="upgrade-foot">'
         +   '<span class="upgrade-price' + (poor ? ' poor' : '') + '">'
-        +     (isMax ? '—' : '💎 ' + formatPrice(cost))
+        +     (isMax || !unlocked ? '—' : '💎 ' + formatPrice(cost))
         +   '</span>'
         +   btnHtml
         + '</div>'
@@ -1629,6 +1754,11 @@
 
     const def = findDef(key);
     if (!def) { alert('该升级项不存在'); return; }
+
+    if (!isUnlocked(def)) {
+      alert(getUnlockHint(def));
+      return;
+    }
 
     const level = getUpgradeLevel(key);
     if (level >= def.maxLevel) { alert('已经满级啦'); return; }
@@ -1656,12 +1786,12 @@
         const msgs = {
           insufficient: '点数不足',
           max_level: '已经满级啦',
-          not_authenticated: '登录状态已失效',
+          not_authenticated: '登录状态已失效，请重新登录',
           profile_not_found: '数据异常，请重新登录',
           invalid_key: '升级项不存在',
           invalid_param: '参数错误'
         };
-        alert(msgs[res.error] || ('购买失败：' + res.error));
+        alert(msgs[res.error] || ('购买失败：' + (res.error || '未知错误')));
         renderUpgradeList();
         return;
       }
@@ -1687,7 +1817,7 @@
       restartAutoClickIfNeeded();
     } catch (err) {
       console.warn('购买失败', err);
-      alert(err.isNetworkFail ? '网络异常，请稍后重试' : ('购买失败：' + (err.message || '未知错误')));
+      alert(translateError(err, '购买失败，请稍后重试'));
       renderUpgradeList();
     }
   }
@@ -1698,7 +1828,7 @@
     purchaseUpgrade(btn.dataset.buy);
   });
 
-  /* ================= 登录弹窗 ================= */
+  /* ================= 登录 ================= */
   function openAuthModal(mode, forced) {
     if (!sb) return;
     authForced = !!forced;
@@ -1782,7 +1912,6 @@
     if (nameErr) { showAuthError(nameErr); authUsername.focus(); return; }
     if (password.length < 6) { showAuthError('密码至少 6 位'); authPassword.focus(); return; }
 
-    // 提交前先做一次静默连接检测，快速失败
     const connOk = await checkConnection(true);
     if (!connOk) {
       showNet('fail', '无法连接服务器，请检查网络后重试。<br>如果多次失败，试试切换 WiFi / 手机流量。');
@@ -1824,7 +1953,6 @@
         if (error) throw error;
       }
 
-      // 记住用户名
       if (rememberMe.checked) {
         try { localStorage.setItem(LS_USERNAME, username); } catch (err) {}
       } else {
@@ -1836,11 +1964,9 @@
       console.warn(err);
       showAuthError(translateAuthError(err));
 
-      // 区分是网络错还是账号错
       if (err.isNetworkFail) {
         showNet('fail', '网络中断，导致提交失败。<br>请检查网络后重试，或切换 WiFi / 手机流量。');
       } else {
-        // 账号错误时也顺手测一下，如果连接其实挂了就提示
         const stillOk = await checkConnection(true);
         if (!stillOk) {
           showNet('fail', '网络中断，请检查网络后重试。');
@@ -1852,23 +1978,10 @@
 
   function translateAuthError(err) {
     if (!err) return '操作失败';
-
-    // 网络问题优先
     if (err.isNetworkFail || isNetworkError(err)) {
       return '无法连接服务器，请检查网络后重试。多试几次仍不行，试试切换 WiFi / 手机流量。';
     }
-
-    const msg = (err.message || err.error_description || err.msg || '操作失败');
-
-    if (/already registered|already exists|User already/i.test(msg)) return '该用户名已被注册';
-    if (/Invalid login credentials/i.test(msg)) return '用户名或密码错误';
-    if (/Password should be at least/i.test(msg)) return '密码至少 6 位';
-    if (/Email not confirmed/i.test(msg)) return '邮箱未确认，请到后台关闭「Confirm Email」';
-    if (/Email signups are disabled|email_provider_disabled/i.test(msg)) return '项目已禁用邮箱注册';
-    if (/signup.*disabled|signups.*disabled/i.test(msg)) return '项目已禁用注册';
-    if (/rate limit|too many/i.test(msg)) return '操作太频繁，请稍后再试';
-    if (/User not found/i.test(msg)) return '该用户名未注册';
-    return msg;
+    return translateError(err, '操作失败，请稍后重试');
   }
 
   async function handleLogout() {
