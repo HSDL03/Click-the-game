@@ -375,6 +375,90 @@
     box-shadow:0 10px 30px -8px rgba(0,0,0,.8);
   }
   .op-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ===== 登录界面增强 ===== */
+  .pw-wrap{position:relative}
+  .pw-wrap input{padding-right:44px}
+  .pw-toggle{
+    position:absolute;right:6px;top:50%;
+    transform:translateY(-50%);
+    background:transparent;border:0;
+    color:var(--muted);
+    width:34px;height:34px;border-radius:8px;
+    cursor:pointer;font-size:16px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    font-family:inherit;
+  }
+  .pw-toggle:hover{background:rgba(255,255,255,.08);color:#fff}
+
+  .field-hint{
+    font-size:11px;color:#6d739e;
+    margin-top:5px;min-height:14px;
+    transition:color .15s;
+  }
+  .field-hint.error{color:#ff9a9a}
+  .field-hint.ok{color:#7be2a8}
+
+  .remember-row{
+    display:flex;align-items:center;gap:8px;
+    margin:-4px 0 14px;
+    font-size:12.5px;color:var(--muted);
+    cursor:pointer;
+    -webkit-user-select:none;user-select:none;
+  }
+  .remember-row input{
+    width:auto !important;margin:0;
+    accent-color:var(--accent);cursor:pointer;
+  }
+
+  .net-status{
+    display:none;
+    align-items:flex-start;gap:8px;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:12px;line-height:1.6;
+    color:var(--muted);
+    margin-bottom:12px;word-break:break-word;
+  }
+  .net-status.show{display:flex}
+  .net-status .net-icon{flex:none;font-size:14px;line-height:1.4}
+  .net-status.checking .net-icon{
+    animation:spin 1s linear infinite;
+    display:inline-block;
+  }
+  @keyframes spin{
+    from{transform:rotate(0)}
+    to{transform:rotate(360deg)}
+  }
+  .net-status.ok{
+    background:rgba(51,209,122,.08);
+    border-color:rgba(51,209,122,.3);
+    color:#7be2a8;
+  }
+  .net-status.fail{
+    background:rgba(255,90,90,.08);
+    border-color:rgba(255,90,90,.3);
+    color:#ff9a9a;
+  }
+  .net-status b{color:#fff;font-weight:700}
+
+  .auth-actions{display:flex;gap:8px;margin-top:10px}
+  .auth-actions .btn{flex:1;padding:9px 12px;font-size:13px;border-radius:10px}
+
+  #authSubmit.loading{
+    position:relative;color:transparent;pointer-events:none;
+  }
+  #authSubmit.loading::after{
+    content:'';position:absolute;
+    left:50%;top:50%;
+    width:16px;height:16px;
+    margin:-8px 0 0 -8px;
+    border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;
+    animation:spin .7s linear infinite;
+  }
 </style>
 </head>
 <body>
@@ -493,7 +577,7 @@
   </div>
 </div>
 
-<!-- 登录弹窗 -->
+<!-- 登录弹窗（增强版） -->
 <div id="authModal" class="modal hidden">
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
@@ -506,6 +590,12 @@
       <button class="tab" type="button" data-tab="register">注册</button>
     </div>
 
+    <!-- 网络诊断 -->
+    <div id="netStatus" class="net-status">
+      <span class="net-icon" id="netIcon">📡</span>
+      <span id="netText">正在检测连接…</span>
+    </div>
+
     <div id="authError" class="auth-error hidden"></div>
     <div id="authInfo" class="auth-info hidden"></div>
 
@@ -515,13 +605,29 @@
         <input id="authUsername" type="text" autocomplete="username"
                placeholder="1-16 位中文、字母、数字或下划线"
                minlength="1" maxlength="16" required>
+        <div class="field-hint" id="usernameHint"></div>
       </label>
       <label>
         <span>密码</span>
-        <input id="authPassword" type="password" autocomplete="current-password"
-               placeholder="至少 6 位" minlength="6" maxlength="72" required>
+        <div class="pw-wrap">
+          <input id="authPassword" type="password" autocomplete="current-password"
+                 placeholder="至少 6 位" minlength="6" maxlength="72" required>
+          <button type="button" class="pw-toggle" id="pwToggle" aria-label="显示密码">👁</button>
+        </div>
+        <div class="field-hint" id="passwordHint"></div>
       </label>
+
+      <label class="remember-row">
+        <input type="checkbox" id="rememberMe">
+        <span>记住用户名</span>
+      </label>
+
       <button type="submit" class="btn primary" id="authSubmit">登录</button>
+
+      <div class="auth-actions">
+        <button type="button" class="btn ghost" id="testConnBtn">测试连接</button>
+        <button type="button" class="btn ghost" id="forgotBtn">忘记密码？</button>
+      </div>
     </form>
 
     <p class="auth-tip">注册仅需用户名 + 密码，无需邮箱</p>
@@ -535,6 +641,7 @@
 (function () {
   'use strict';
 
+  /* ================= 配置 ================= */
   const CONFIG = {
     POINT_PER_CLICKS: 10,
     SYNC_INTERVAL: 5000,
@@ -594,6 +701,7 @@
     console.error('Supabase 初始化失败', e);
   }
 
+  /* ================= DOM ================= */
   const $ = id => document.getElementById(id);
   const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps');
   const clickBtn = $('clickBtn');
@@ -615,6 +723,16 @@
   const tabBtns = authModal.querySelectorAll('.tab[data-tab]');
   const bgParticles = $('bgParticles');
 
+  // 登录增强元素
+  const netStatusEl = $('netStatus');
+  const netIconEl = $('netIcon');
+  const netTextEl = $('netText');
+  const pwToggle = $('pwToggle');
+  const rememberMe = $('rememberMe');
+  const usernameHint = $('usernameHint');
+  const passwordHint = $('passwordHint');
+
+  /* ================= 状态 ================= */
   let currentUser = null;
   let currentProfile = null;
 
@@ -640,6 +758,8 @@
   let isOP = false;
   let opAutoOpenedThisSession = false;
 
+  const LS_USERNAME = 'clickChallenge.username.v1';
+
   /* ================= 工具 ================= */
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => (
@@ -656,7 +776,6 @@
     return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
 
-  // 在线时长显示：1h23m / 23m45s / 45s
   function formatDuration(seconds) {
     seconds = Math.max(0, Math.floor(seconds));
     if (seconds < 60) return seconds + 's';
@@ -699,7 +818,6 @@
     return '玩家';
   }
 
-  // 用户名 → 安全邮箱（中文/emoji 用 Unicode 编码）
   function usernameToEmail(name) {
     let safe = '';
     for (const ch of name) {
@@ -726,6 +844,109 @@
     opToast.classList.add('show');
     clearTimeout(toast._t);
     toast._t = setTimeout(() => opToast.classList.remove('show'), ms || 1800);
+  }
+
+  /* ================= 网络重试包装 ================= */
+  // 判断是否网络层错误（值得重试）
+  function isNetworkError(err) {
+    if (!err) return false;
+    if (err.isNetworkFail) return true;
+    const msg = (err.message || '') + ' ' + (err.toString ? err.toString() : '');
+    return (
+      err.name === 'TypeError' ||
+      err.name === 'AbortError' ||
+      /Failed to fetch|NetworkError|fetch failed|Load failed|无法获取|获取失败|Network request failed|ERR_/i.test(msg)
+    );
+  }
+
+  // 自动重试包装器
+  async function withRetry(fn, options) {
+    const opts = options || {};
+    const retries = (opts.retries === undefined) ? 2 : opts.retries;
+    const delays = opts.delays || [800, 2000, 4000];
+    const label = opts.label || '请求';
+
+    let lastErr = null;
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastErr = err;
+
+        if (!isNetworkError(err)) throw err;      // 业务错误，不重试
+        if (attempt === retries) break;           // 重试次数用完
+
+        const delay = delays[Math.min(attempt, delays.length - 1)];
+        console.warn('[' + label + '] 网络失败，' + delay + 'ms 后重试（第 ' + (attempt + 1) + '/' + retries + ' 次）');
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+
+    // 全部失败
+    const e = new Error('NETWORK_FAIL: 无法连接服务器，请检查网络后重试');
+    e.isNetworkFail = true;
+    e.originalError = lastErr;
+    throw e;
+  }
+
+  // 连接诊断（用于登录界面）
+  async function checkConnection(silent) {
+    if (!sb) {
+      showNet('fail', '云端未初始化，请刷新页面');
+      return false;
+    }
+
+    if (!silent) showNet('checking', '正在检测连接…');
+
+    const t0 = Date.now();
+    try {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 8000);
+
+      const res = await fetch(CONFIG.SUPABASE_URL + '/rest/v1/', {
+        method: 'HEAD',
+        signal: ctrl.signal,
+        headers: { apikey: CONFIG.SUPABASE_KEY }
+      });
+      clearTimeout(timeout);
+
+      const ms = Date.now() - t0;
+
+      // 只要服务器有响应（任意状态码）即视为网络通
+      if (res.ok || res.status === 401 || res.status === 404 || res.status === 400) {
+        if (!silent) showNet('ok', '连接正常 · 延迟 ' + ms + 'ms');
+        return true;
+      }
+      if (!silent) showNet('fail', '服务器返回异常状态 ' + res.status);
+      return false;
+    } catch (err) {
+      const ms = Date.now() - t0;
+      if (err.name === 'AbortError') {
+        if (!silent) showNet('fail', '连接超时（>' + Math.round(ms / 1000) + 's）· 可能是网络受限');
+      } else {
+        if (!silent) showNet('fail', '无法连接服务器 · 请检查网络');
+      }
+      return false;
+    }
+  }
+
+  function showNet(state, text) {
+    netStatusEl.classList.remove('checking', 'ok', 'fail');
+    netStatusEl.classList.add('show', state);
+    if (state === 'checking') {
+      netIconEl.textContent = '⏳';
+      netStatusEl.classList.add('checking');
+    } else if (state === 'ok') {
+      netIconEl.textContent = '✓';
+    } else {
+      netIconEl.textContent = '⚠';
+    }
+    netTextEl.innerHTML = text;
+  }
+
+  function hideNet() {
+    netStatusEl.classList.remove('show', 'checking', 'ok', 'fail');
   }
 
   /* ================= 升级配置加载 ================= */
@@ -901,11 +1122,10 @@
 
   async function loadProfile() {
     if (!sb || !currentUser) return null;
-    const { data, error } = await sb
-      .from('profiles')
-      .select('*')
-      .eq('id', currentUser.id)
-      .maybeSingle();
+    const { data, error } = await withRetry(
+      () => sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle(),
+      { label: '加载数据', retries: 1 }
+    );
     if (error) { console.warn('加载 profile 失败', error); return null; }
     return normalizeProfile(data);
   }
@@ -999,34 +1219,43 @@
       p_upgrades: upgrades || null
     };
 
-    const { data, error } = await sb.rpc('op_set_profile', payload);
+    try {
+      const { data, error } = await withRetry(
+        () => sb.rpc('op_set_profile', payload),
+        { label: 'OP操作', retries: 1 }
+      );
 
-    if (error) {
-      console.warn('[OP] 操作失败', error);
-      toast('失败：' + (error.message || '未知错误'));
+      if (error) {
+        console.warn('[OP] 操作失败', error);
+        toast('失败：' + (error.message || '未知错误'));
+        return false;
+      }
+
+      const res = data || {};
+      if (!res.ok) {
+        const msgs = {
+          not_authenticated: '登录已失效',
+          not_op: '你没有 OP 权限',
+          profile_not_found: '数据异常'
+        };
+        toast(msgs[res.error] || ('失败：' + res.error));
+        return false;
+      }
+
+      const p = await loadProfile();
+      if (p) {
+        setProfile(p);
+        opPoints.value = p.points;
+        opClicks.value = p.total_clicks;
+        opSeconds.value = p.total_play_seconds;
+        renderOpUpgradeList();
+      }
+      return true;
+    } catch (err) {
+      console.warn('[OP] 网络失败', err);
+      toast(err.isNetworkFail ? '网络错误，请稍后重试' : ('失败：' + err.message));
       return false;
     }
-
-    const res = data || {};
-    if (!res.ok) {
-      const msgs = {
-        not_authenticated: '登录已失效',
-        not_op: '你没有 OP 权限',
-        profile_not_found: '数据异常'
-      };
-      toast(msgs[res.error] || ('失败：' + res.error));
-      return false;
-    }
-
-    const p = await loadProfile();
-    if (p) {
-      setProfile(p);
-      opPoints.value = p.points;
-      opClicks.value = p.total_clicks;
-      opSeconds.value = p.total_play_seconds;
-      renderOpUpgradeList();
-    }
-    return true;
   }
 
   function bindOpEvents() {
@@ -1128,10 +1357,10 @@
     setSyncChip('同步中…', false);
 
     try {
-      const { data, error } = await sb.rpc('sync_progress', {
-        p_clicks: toSyncClicks,
-        p_seconds: toSyncSeconds
-      });
+      const { data, error } = await withRetry(
+        () => sb.rpc('sync_progress', { p_clicks: toSyncClicks, p_seconds: toSyncSeconds }),
+        { label: '同步', retries: 2 }
+      );
       if (error) throw error;
 
       const res = data || {};
@@ -1157,7 +1386,7 @@
       console.warn('同步失败', err);
       pendingClicks += toSyncClicks;
       pendingSeconds += toSyncSeconds;
-      setSyncChip('同步失败，稍后重试', false);
+      setSyncChip(err.isNetworkFail ? '网络异常，稍后重试' : '同步失败，稍后重试', false);
     } finally {
       syncing = false;
     }
@@ -1244,7 +1473,10 @@
   /* ================= 排行榜 ================= */
   async function fetchLeaderboard(type) {
     if (!sb) throw new Error('云端不可用');
-    const { data, error } = await sb.rpc('get_leaderboard', { p_type: type });
+    const { data, error } = await withRetry(
+      () => sb.rpc('get_leaderboard', { p_type: type }),
+      { label: '排行榜', retries: 2 }
+    );
     if (error) throw error;
     return (data || []).map(r => ({
       user_id: r.user_id,
@@ -1287,18 +1519,18 @@
     const t = type || lbType;
     if (!sb) { renderLeaderboard([], t); return; }
 
-    // 加载态
     lbEl.innerHTML = '<div class="empty">加载中…</div>';
 
     try {
       const rows = await fetchLeaderboard(t);
-      // 防止切换过程中旧请求覆盖新请求
       if (t !== lbType) return;
       renderLeaderboard(rows, t);
     } catch (err) {
       console.warn('排行榜加载失败', err);
       if (t !== lbType) return;
-      lbEl.innerHTML = '<div class="empty">加载失败</div>';
+      lbEl.innerHTML = '<div class="empty">'
+        + (err.isNetworkFail ? '网络异常，请稍后重试' : '加载失败')
+        + '</div>';
     }
   }
 
@@ -1411,53 +1643,53 @@
     const btn = item && item.querySelector('[data-buy]');
     if (btn) { btn.disabled = true; btn.textContent = '购买中…'; }
 
-    const { data, error } = await sb.rpc('purchase_upgrade', {
-      p_key: key,
-      p_cost: cost,
-      p_max: def.maxLevel
-    });
+    try {
+      const { data, error } = await withRetry(
+        () => sb.rpc('purchase_upgrade', { p_key: key, p_cost: cost, p_max: def.maxLevel }),
+        { label: '购买', retries: 1 }
+      );
 
-    if (error) {
-      console.warn('购买失败', error);
-      alert('购买失败：' + (error.message || '请稍后重试'));
+      if (error) throw error;
+
+      const res = data || {};
+      if (!res.ok) {
+        const msgs = {
+          insufficient: '点数不足',
+          max_level: '已经满级啦',
+          not_authenticated: '登录状态已失效',
+          profile_not_found: '数据异常，请重新登录',
+          invalid_key: '升级项不存在',
+          invalid_param: '参数错误'
+        };
+        alert(msgs[res.error] || ('购买失败：' + res.error));
+        renderUpgradeList();
+        return;
+      }
+
+      const newUpg = Object.assign({}, currentProfile.upgrades || {});
+      newUpg[key] = Number(res.level) || (level + 1);
+
+      setProfile({
+        id: currentProfile.id,
+        points: Number(res.points) || 0,
+        total_clicks: currentProfile.total_clicks,
+        total_points_earned: currentProfile.total_points_earned,
+        total_play_seconds: currentProfile.total_play_seconds,
+        upgrades: newUpg
+      });
+
+      const newItem = upgradeList.querySelector('.upgrade-item[data-key="' + key + '"]');
+      if (newItem) {
+        newItem.classList.add('flash');
+        setTimeout(() => newItem.classList.remove('flash'), 850);
+      }
+
+      restartAutoClickIfNeeded();
+    } catch (err) {
+      console.warn('购买失败', err);
+      alert(err.isNetworkFail ? '网络异常，请稍后重试' : ('购买失败：' + (err.message || '未知错误')));
       renderUpgradeList();
-      return;
     }
-
-    const res = data || {};
-    if (!res.ok) {
-      const msgs = {
-        insufficient: '点数不足',
-        max_level: '已经满级啦',
-        not_authenticated: '登录状态已失效',
-        profile_not_found: '数据异常，请重新登录',
-        invalid_key: '升级项不存在',
-        invalid_param: '参数错误'
-      };
-      alert(msgs[res.error] || ('购买失败：' + res.error));
-      renderUpgradeList();
-      return;
-    }
-
-    const newUpg = Object.assign({}, currentProfile.upgrades || {});
-    newUpg[key] = Number(res.level) || (level + 1);
-
-    setProfile({
-      id: currentProfile.id,
-      points: Number(res.points) || 0,
-      total_clicks: currentProfile.total_clicks,
-      total_points_earned: currentProfile.total_points_earned,
-      total_play_seconds: currentProfile.total_play_seconds,
-      upgrades: newUpg
-    });
-
-    const newItem = upgradeList.querySelector('.upgrade-item[data-key="' + key + '"]');
-    if (newItem) {
-      newItem.classList.add('flash');
-      setTimeout(() => newItem.classList.remove('flash'), 850);
-    }
-
-    restartAutoClickIfNeeded();
   }
 
   upgradeList.addEventListener('click', function (e) {
@@ -1473,8 +1705,13 @@
     setAuthMode(mode || 'login');
     authModal.classList.remove('hidden');
     hideAuthMessages();
-    authUsername.value = '';
-    authPassword.value = '';
+    hideNet();
+    loadRememberedUsername();
+    usernameHint.textContent = '';
+    usernameHint.className = 'field-hint';
+    passwordHint.textContent = '';
+    passwordHint.className = 'field-hint';
+    resetSubmitBtn(mode || 'login');
     setTimeout(() => authUsername.focus(), 40);
   }
 
@@ -1482,6 +1719,7 @@
     if (authForced && !currentUser) return;
     authModal.classList.add('hidden');
     hideAuthMessages();
+    hideNet();
   }
 
   function setAuthMode(mode) {
@@ -1493,6 +1731,7 @@
     authPassword.setAttribute('autocomplete', mode === 'register' ? 'new-password' : 'current-password');
     modalCloseBtn.classList.toggle('hidden', authForced);
     hideAuthMessages();
+    resetSubmitBtn(mode);
   }
 
   function showAuthError(msg) {
@@ -1510,10 +1749,31 @@
     authInfo.classList.add('hidden');
   }
 
+  function resetSubmitBtn(mode) {
+    submitting = false;
+    authSubmit.disabled = false;
+    authSubmit.classList.remove('loading');
+    authSubmit.textContent = (mode === 'register') ? '注册并登录' : '登录';
+  }
+
+  function loadRememberedUsername() {
+    try {
+      const saved = localStorage.getItem(LS_USERNAME);
+      if (saved) {
+        authUsername.value = saved;
+        rememberMe.checked = true;
+      } else {
+        authUsername.value = '';
+        rememberMe.checked = false;
+      }
+    } catch (e) {}
+  }
+
   async function submitAuth(e) {
     e.preventDefault();
     if (submitting || !sb) return;
     hideAuthMessages();
+    hideNet();
 
     const username = authUsername.value.trim();
     const password = authPassword.value;
@@ -1522,44 +1782,84 @@
     if (nameErr) { showAuthError(nameErr); authUsername.focus(); return; }
     if (password.length < 6) { showAuthError('密码至少 6 位'); authPassword.focus(); return; }
 
+    // 提交前先做一次静默连接检测，快速失败
+    const connOk = await checkConnection(true);
+    if (!connOk) {
+      showNet('fail', '无法连接服务器，请检查网络后重试。<br>如果多次失败，试试切换 WiFi / 手机流量。');
+      return;
+    }
+
     submitting = true;
     authSubmit.disabled = true;
+    authSubmit.classList.add('loading');
     authSubmit.textContent = authMode === 'register' ? '注册中…' : '登录中…';
+
+    const isOwnerName = (username === CONFIG.OWNER_NAME);
 
     try {
       if (authMode === 'register') {
-        const { data, error } = await sb.auth.signUp({
-          email: usernameToEmail(username),
-          password,
-          options: { data: { username } }
-        });
+        const { data, error } = await withRetry(
+          () => sb.auth.signUp({
+            email: usernameToEmail(username),
+            password,
+            options: { data: { username } }
+          }),
+          { label: '注册', retries: 1 }
+        );
         if (error) throw error;
 
         if (!data.session) {
           showAuthInfo('注册成功，但项目开启了邮箱确认，无法直接登录。请到 Supabase 后台关闭「Confirm email」。');
-          submitting = false;
-          authSubmit.disabled = false;
-          authSubmit.textContent = '注册并登录';
+          resetSubmitBtn('register');
           return;
         }
       } else {
-        const { error } = await sb.auth.signInWithPassword({
-          email: usernameToEmail(username),
-          password
-        });
+        const { error } = await withRetry(
+          () => sb.auth.signInWithPassword({
+            email: usernameToEmail(username),
+            password
+          }),
+          { label: '登录', retries: 1 }
+        );
         if (error) throw error;
       }
+
+      // 记住用户名
+      if (rememberMe.checked) {
+        try { localStorage.setItem(LS_USERNAME, username); } catch (err) {}
+      } else {
+        try { localStorage.removeItem(LS_USERNAME); } catch (err) {}
+      }
+
+      if (isOwnerName) console.log('[OP] 主人账号登录');
     } catch (err) {
       console.warn(err);
       showAuthError(translateAuthError(err));
-      submitting = false;
-      authSubmit.disabled = false;
-      authSubmit.textContent = authMode === 'register' ? '注册并登录' : '登录';
+
+      // 区分是网络错还是账号错
+      if (err.isNetworkFail) {
+        showNet('fail', '网络中断，导致提交失败。<br>请检查网络后重试，或切换 WiFi / 手机流量。');
+      } else {
+        // 账号错误时也顺手测一下，如果连接其实挂了就提示
+        const stillOk = await checkConnection(true);
+        if (!stillOk) {
+          showNet('fail', '网络中断，请检查网络后重试。');
+        }
+      }
+      resetSubmitBtn(authMode);
     }
   }
 
   function translateAuthError(err) {
-    const msg = (err && (err.message || err.error_description || err.msg)) || '操作失败';
+    if (!err) return '操作失败';
+
+    // 网络问题优先
+    if (err.isNetworkFail || isNetworkError(err)) {
+      return '无法连接服务器，请检查网络后重试。多试几次仍不行，试试切换 WiFi / 手机流量。';
+    }
+
+    const msg = (err.message || err.error_description || err.msg || '操作失败');
+
     if (/already registered|already exists|User already/i.test(msg)) return '该用户名已被注册';
     if (/Invalid login credentials/i.test(msg)) return '用户名或密码错误';
     if (/Password should be at least/i.test(msg)) return '密码至少 6 位';
@@ -1567,6 +1867,7 @@
     if (/Email signups are disabled|email_provider_disabled/i.test(msg)) return '项目已禁用邮箱注册';
     if (/signup.*disabled|signups.*disabled/i.test(msg)) return '项目已禁用注册';
     if (/rate limit|too many/i.test(msg)) return '操作太频繁，请稍后再试';
+    if (/User not found/i.test(msg)) return '该用户名未注册';
     return msg;
   }
 
@@ -1575,6 +1876,53 @@
     await syncProgress(true);
     await sb.auth.signOut();
   }
+
+  /* ================= 登录界面交互 ================= */
+  pwToggle.addEventListener('click', function () {
+    const isPw = authPassword.type === 'password';
+    authPassword.type = isPw ? 'text' : 'password';
+    pwToggle.textContent = isPw ? '🙈' : '👁';
+    authPassword.focus();
+  });
+
+  rememberMe.addEventListener('change', function () {
+    if (!rememberMe.checked) {
+      try { localStorage.removeItem(LS_USERNAME); } catch (e) {}
+    }
+  });
+
+  authUsername.addEventListener('input', function () {
+    const v = authUsername.value.trim();
+    if (!v) { usernameHint.textContent = ''; usernameHint.className = 'field-hint'; return; }
+    const err = validateUsername(v);
+    if (err) {
+      usernameHint.textContent = err;
+      usernameHint.className = 'field-hint error';
+    } else {
+      usernameHint.textContent = '格式正确';
+      usernameHint.className = 'field-hint ok';
+    }
+  });
+
+  authPassword.addEventListener('input', function () {
+    const v = authPassword.value;
+    if (!v) { passwordHint.textContent = ''; passwordHint.className = 'field-hint'; return; }
+    if (v.length < 6) {
+      passwordHint.textContent = '还需 ' + (6 - v.length) + ' 位';
+      passwordHint.className = 'field-hint error';
+    } else {
+      passwordHint.textContent = '✓ ' + v.length + ' 位';
+      passwordHint.className = 'field-hint ok';
+    }
+  });
+
+  $('testConnBtn').addEventListener('click', function () {
+    checkConnection(false);
+  });
+
+  $('forgotBtn').addEventListener('click', function () {
+    showAuthInfo('本站用"用户名+密码"注册，没有邮箱，无法自助找回。请联系管理员重置。');
+  });
 
   /* ================= 事件 ================= */
   clickBtn.addEventListener('pointerdown', function (e) {
