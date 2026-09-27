@@ -80,7 +80,6 @@
     0%,100%{box-shadow:0 0 0 0 rgba(255,204,102,.35)}
     50%{box-shadow:0 0 12px 2px rgba(255,204,102,.35)}
   }
-  .op-btn:hover{background:linear-gradient(160deg,rgba(255,184,77,.4),rgba(255,138,61,.25))}
 
   .panel{
     background:linear-gradient(180deg,var(--panel-a),var(--panel-b));
@@ -109,7 +108,6 @@
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;user-select:none;
     will-change:transform;transform:translateZ(0);
-    backface-visibility:hidden;-webkit-backface-visibility:hidden;
     transition:transform .15s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease, filter .15s ease;
     box-shadow:0 18px 36px -16px rgba(91,124,255,.85), inset 0 -4px 0 rgba(0,0,0,.22);
   }
@@ -171,8 +169,7 @@
     background:linear-gradient(135deg,rgba(91,140,255,.11),rgba(91,140,255,.02));
   }
   .upgrade-item.locked{
-    opacity:.5;
-    background:rgba(255,255,255,.015);
+    opacity:.5;background:rgba(255,255,255,.015);
     border-color:rgba(255,255,255,.04);
   }
   .upgrade-item.locked .upgrade-icon{filter:grayscale(1)}
@@ -241,8 +238,6 @@
   .btn.ghost:hover{background:rgba(255,255,255,.11)}
   .btn.gold{background:linear-gradient(160deg,#ffb84d,#ff8a3d);color:#2a1700}
   .btn.danger{background:rgba(255,90,90,.15);color:#ff9a9a;border:1px solid rgba(255,90,90,.35)}
-  .btn.danger:hover{background:rgba(255,90,90,.25)}
-  .btn.block{width:100%}
   .btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
 
   .lb-fab{
@@ -256,14 +251,9 @@
     transition:transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease;
     box-shadow:0 12px 28px -8px rgba(91,140,255,.7), inset 0 -3px 0 rgba(0,0,0,.2);
   }
-  .lb-fab:hover{
-    transform:translateZ(0) translateY(-4px);
-    box-shadow:0 20px 36px -10px rgba(91,140,255,.9), inset 0 -3px 0 rgba(0,0,0,.2);
-  }
-  .lb-fab:active{
-    transform:translateZ(0) scale(.92);
-    transition-duration:.08s;
-  }
+  .lb-fab:hover{transform:translateZ(0) translateY(-4px);
+    box-shadow:0 20px 36px -10px rgba(91,140,255,.9), inset 0 -3px 0 rgba(0,0,0,.2);}
+  .lb-fab:active{transform:translateZ(0) scale(.92);transition-duration:.08s}
 
   .modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
   .modal.hidden{display:none}
@@ -362,7 +352,6 @@
     border:1px solid rgba(255,255,255,.12);
     border-radius:10px;padding:9px 11px;
     color:var(--text);font-size:14px;font-family:inherit;outline:none;
-    transition:border-color .15s;
   }
   .op-row input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,204,102,.15)}
   .op-row .btn{flex:none;padding:9px 14px;font-size:13px;border-radius:10px}
@@ -388,8 +377,7 @@
   .pw-toggle{
     position:absolute;right:6px;top:50%;
     transform:translateY(-50%);
-    background:transparent;border:0;
-    color:var(--muted);
+    background:transparent;border:0;color:var(--muted);
     width:34px;height:34px;border-radius:8px;
     cursor:pointer;font-size:16px;line-height:1;
     display:flex;align-items:center;justify-content:center;
@@ -397,69 +385,38 @@
   }
   .pw-toggle:hover{background:rgba(255,255,255,.08);color:#fff}
 
-  .field-hint{
-    font-size:11px;color:#6d739e;
-    margin-top:5px;min-height:14px;
-    transition:color .15s;
-  }
+  .field-hint{font-size:11px;color:#6d739e;margin-top:5px;min-height:14px}
   .field-hint.error{color:#ff9a9a}
   .field-hint.ok{color:#7be2a8}
 
   .remember-row{
     display:flex;align-items:center;gap:8px;
-    margin:-4px 0 14px;
-    font-size:12.5px;color:var(--muted);
-    cursor:pointer;
-    -webkit-user-select:none;user-select:none;
+    margin:-4px 0 14px;font-size:12.5px;color:var(--muted);
+    cursor:pointer;-webkit-user-select:none;user-select:none;
   }
-  .remember-row input{
-    width:auto !important;margin:0;
-    accent-color:var(--accent);cursor:pointer;
-  }
+  .remember-row input{width:auto !important;margin:0;accent-color:var(--accent);cursor:pointer}
 
   .net-status{
-    display:none;
-    align-items:flex-start;gap:8px;
-    background:rgba(255,255,255,.04);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:10px 12px;
-    font-size:12px;line-height:1.6;
-    color:var(--muted);
+    display:none;align-items:flex-start;gap:8px;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;
+    font-size:12px;line-height:1.6;color:var(--muted);
     margin-bottom:12px;word-break:break-word;
   }
   .net-status.show{display:flex}
   .net-status .net-icon{flex:none;font-size:14px;line-height:1.4}
-  .net-status.checking .net-icon{
-    animation:spin 1s linear infinite;
-    display:inline-block;
-  }
-  @keyframes spin{
-    from{transform:rotate(0)}
-    to{transform:rotate(360deg)}
-  }
-  .net-status.ok{
-    background:rgba(51,209,122,.08);
-    border-color:rgba(51,209,122,.3);
-    color:#7be2a8;
-  }
-  .net-status.fail{
-    background:rgba(255,90,90,.08);
-    border-color:rgba(255,90,90,.3);
-    color:#ff9a9a;
-  }
-  .net-status b{color:#fff;font-weight:700}
+  .net-status.checking .net-icon{animation:spin 1s linear infinite;display:inline-block}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .net-status.ok{background:rgba(51,209,122,.08);border-color:rgba(51,209,122,.3);color:#7be2a8}
+  .net-status.fail{background:rgba(255,90,90,.08);border-color:rgba(255,90,90,.3);color:#ff9a9a}
 
   .auth-actions{display:flex;gap:8px;margin-top:10px}
   .auth-actions .btn{flex:1;padding:9px 12px;font-size:13px;border-radius:10px}
 
-  #authSubmit.loading{
-    position:relative;color:transparent;pointer-events:none;
-  }
+  #authSubmit.loading{position:relative;color:transparent;pointer-events:none}
   #authSubmit.loading::after{
     content:'';position:absolute;
-    left:50%;top:50%;
-    width:16px;height:16px;
+    left:50%;top:50%;width:16px;height:16px;
     margin:-8px 0 0 -8px;
     border:2px solid rgba(255,255,255,.3);
     border-top-color:#fff;border-radius:50%;
@@ -522,15 +479,13 @@
 <div id="lbModal" class="modal hidden">
   <div class="modal-backdrop" data-close-lb></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
-    <button class="modal-close" type="button" data-close-lb aria-label="关闭">×</button>
+    <button class="modal-close" type="button" data-close-lb>×</button>
     <h3 class="modal-title">🏆 排行榜</h3>
-
     <div class="tabs" id="lbTabs">
       <button class="tab active" type="button" data-lb="clicks">点击次数</button>
       <button class="tab" type="button" data-lb="points">累计点数</button>
       <button class="tab" type="button" data-lb="time">在线时长</button>
     </div>
-
     <div id="leaderboard" class="lb-list"><div class="empty">加载中…</div></div>
   </div>
 </div>
@@ -538,7 +493,7 @@
 <div id="opModal" class="modal hidden">
   <div class="modal-backdrop" data-close-op></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
-    <button class="modal-close" type="button" data-close-op aria-label="关闭">×</button>
+    <button class="modal-close" type="button" data-close-op>×</button>
     <h3 class="modal-title">⚙ OP 菜单</h3>
     <p class="modal-subtitle">管理员权限 · 操作立即生效</p>
 
@@ -584,7 +539,7 @@
 <div id="authModal" class="modal hidden">
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel" role="dialog" aria-modal="true">
-    <button class="modal-close" type="button" data-close aria-label="关闭">×</button>
+    <button class="modal-close" type="button" data-close>×</button>
     <h3 class="modal-title" id="modalTitle">登录</h3>
     <p class="modal-subtitle" id="modalSubtitle">必须先登录才能开始</p>
 
@@ -614,7 +569,7 @@
         <div class="pw-wrap">
           <input id="authPassword" type="password" autocomplete="current-password"
                  placeholder="至少 6 位" minlength="6" maxlength="72" required>
-          <button type="button" class="pw-toggle" id="pwToggle" aria-label="显示密码">👁</button>
+          <button type="button" class="pw-toggle" id="pwToggle">👁</button>
         </div>
         <div class="field-hint" id="passwordHint"></div>
       </label>
@@ -643,7 +598,6 @@
 (function () {
   'use strict';
 
-  /* ================= 配置 ================= */
   const CONFIG = {
     POINT_PER_CLICKS: 10,
     SYNC_INTERVAL: 5000,
@@ -656,6 +610,11 @@
 
   /* ============================================================
    *  升级定义
+   *
+   *  核心公式：
+   *    每次自动点击获得的点击数 = 底数 × 倍率
+   *    底数 = 1 + 底数等级  (等级0→1, 等级10→11)
+   *    倍率 = 1 + 倍率等级  (等级0→1, 等级100→101)
    * ============================================================ */
   const BUILTIN_UPGRADES = [
     {
@@ -731,7 +690,6 @@
     console.error('Supabase 初始化失败', e);
   }
 
-  /* ================= DOM ================= */
   const $ = id => document.getElementById(id);
   const timerEl = $('timer'), countEl = $('count'), cpsEl = $('cps');
   const clickBtn = $('clickBtn');
@@ -761,7 +719,6 @@
   const usernameHint = $('usernameHint');
   const passwordHint = $('passwordHint');
 
-  /* ================= 状态 ================= */
   let currentUser = null;
   let currentProfile = null;
 
@@ -875,44 +832,33 @@
     toast._t = setTimeout(() => opToast.classList.remove('show'), ms || 1800);
   }
 
-  /* ============================================================
-   *  错误翻译（统一转中文）
-   * ============================================================ */
+  /* ================= 错误翻译 ================= */
   function translateError(err, fallback) {
     if (!err) return fallback || '操作失败';
-
     if (err.isNetworkFail) return '网络异常，请稍后重试';
     if (err.name === 'AbortError') return '请求超时，请稍后重试';
 
     const raw = String(err.message || err.error_description || err.msg || err.details || '');
     if (!raw) return fallback || '操作失败';
-
-    // 已是中文 → 直接返回
     if (/[\u4e00-\u9fa5]/.test(raw)) return raw;
 
-    // 常见 Supabase / PostgreSQL 错误
-    if (/Failed to fetch|NetworkError|Load failed|fetch failed|Network request failed/i.test(raw)) {
-      return '无法连接服务器，请检查网络后重试';
-    }
+    if (/Failed to fetch|NetworkError|Load failed|fetch failed/i.test(raw)) return '无法连接服务器，请检查网络后重试';
     if (/Invalid login credentials/i.test(raw)) return '用户名或密码错误';
     if (/Email not confirmed/i.test(raw)) return '邮箱未确认，请联系管理员';
     if (/User already registered/i.test(raw)) return '该用户名已被注册';
     if (/Password should be at least/i.test(raw)) return '密码太短，至少 6 位';
     if (/Unable to validate email/i.test(raw)) return '用户名格式无法识别';
     if (/signup.*disabled/i.test(raw)) return '注册功能已关闭';
-    if (/rate limit|too many requests|too many/i.test(raw)) return '操作太频繁，请稍后再试';
+    if (/rate limit|too many/i.test(raw)) return '操作太频繁，请稍后再试';
     if (/permission denied/i.test(raw)) return '权限不足';
     if (/row-level security|RLS/i.test(raw)) return '权限校验失败';
     if (/JWT expired|invalid jwt/i.test(raw)) return '登录状态已过期，请重新登录';
     if (/duplicate key|already exists/i.test(raw)) return '记录已存在';
-    if (/violates.*constraint|invalid input/i.test(raw)) return '数据不符合规则';
     if (/does not exist/i.test(raw)) return '数据不存在';
-    if (/function .* does not exist/i.test(raw)) return '服务端接口不存在，请联系管理员';
     if (/timeout|timed out/i.test(raw)) return '请求超时，请稍后重试';
     if (/internal server error|server error/i.test(raw)) return '服务器错误，请稍后重试';
     if (/bad gateway|service unavailable/i.test(raw)) return '服务暂时不可用，请稍后重试';
 
-    // 剩余情况：返回 fallback，避免暴露英文
     return fallback || '操作失败，请稍后重试';
   }
 
@@ -924,7 +870,7 @@
     return (
       err.name === 'TypeError' ||
       err.name === 'AbortError' ||
-      /Failed to fetch|NetworkError|fetch failed|Load failed|无法获取|获取失败|Network request failed|ERR_/i.test(msg)
+      /Failed to fetch|NetworkError|fetch failed|Load failed|无法获取|ERR_/i.test(msg)
     );
   }
 
@@ -941,12 +887,10 @@
         return await fn();
       } catch (err) {
         lastErr = err;
-
         if (!isNetworkError(err)) throw err;
         if (attempt === retries) break;
-
         const delay = delays[Math.min(attempt, delays.length - 1)];
-        console.warn('[' + label + '] 网络失败，' + delay + 'ms 后重试（第 ' + (attempt + 1) + '/' + retries + ' 次）');
+        console.warn('[' + label + '] 网络失败，' + delay + 'ms 后重试');
         await new Promise(r => setTimeout(r, delay));
       }
     }
@@ -962,7 +906,6 @@
       showNet('fail', '云端未初始化，请刷新页面');
       return false;
     }
-
     if (!silent) showNet('checking', '正在检测连接…');
 
     const t0 = Date.now();
@@ -978,7 +921,6 @@
       clearTimeout(timeout);
 
       const ms = Date.now() - t0;
-
       if (res.ok || res.status === 401 || res.status === 404 || res.status === 400) {
         if (!silent) showNet('ok', '连接正常 · 延迟 ' + ms + 'ms');
         return true;
@@ -986,9 +928,8 @@
       if (!silent) showNet('fail', '服务器返回异常状态 ' + res.status);
       return false;
     } catch (err) {
-      const ms = Date.now() - t0;
       if (err.name === 'AbortError') {
-        if (!silent) showNet('fail', '连接超时（>' + Math.round(ms / 1000) + 's）· 可能是网络受限');
+        if (!silent) showNet('fail', '连接超时 · 可能是网络受限');
       } else {
         if (!silent) showNet('fail', '无法连接服务器 · 请检查网络');
       }
@@ -1014,7 +955,7 @@
     netStatusEl.classList.remove('show', 'checking', 'ok', 'fail');
   }
 
-  /* ================= 升级配置加载 ================= */
+  /* ================= 升级配置 ================= */
   function validateUpgradeDef(u) {
     if (!u || typeof u !== 'object') return false;
     if (!u.key || typeof u.key !== 'string') return false;
@@ -1043,10 +984,10 @@
       if (!valid.length) throw new Error('没有有效的升级项');
 
       upgradeDefs = valid;
-      console.log('[升级配置] 已从 ' + url + ' 加载 ' + valid.length + ' 项');
+      console.log('[升级配置] 已加载 ' + valid.length + ' 项');
       return true;
     } catch (e) {
-      console.warn('[升级配置] 加载 ' + url + ' 失败（' + e.message + '），使用内置配置');
+      console.warn('[升级配置] 加载失败，使用内置配置');
       upgradeDefs = BUILTIN_UPGRADES.slice();
       return false;
     }
@@ -1097,11 +1038,11 @@
         break;
       }
       case 'autoClickBase': {
-        value = 1 + level;
+        value = 1 + level;   // 底数 = 1 + 等级
         break;
       }
       case 'autoClickMultiplier': {
-        value = 1 + level;
+        value = 1 + level;   // 倍率 = 1 + 等级
         break;
       }
     }
@@ -1124,30 +1065,29 @@
     return arr[Math.min(found.level, arr.length - 1)] || null;
   }
 
-  // 底数值：等级 0 → 1；等级 n → 1 + n
+  // 底数 = 1 + 底数等级
   function engineGetAutoBase() {
     const found = findEffect('autoClickBase');
     if (!found) return 1;
     return 1 + found.level;
   }
 
-  // 倍率值：等级 0 → 1；等级 n → 1 + n
+  // 倍率 = 1 + 倍率等级
   function engineGetAutoMultiplier() {
     const found = findEffect('autoClickMultiplier');
     if (!found) return 1;
     return 1 + found.level;
   }
 
-  // 每次自动点击获得的点击数 = 底数 × 倍率
+  // 核心公式：每次自动点击获得的点击数 = 底数 × 倍率
   function engineGetAutoClickPerTick() {
     return engineGetAutoBase() * engineGetAutoMultiplier();
   }
 
-  /* ================= 解锁逻辑 ================= */
+  /* ================= 解锁 ================= */
   function isUnlocked(def) {
     const u = def.unlock;
     if (!u) return true;
-
     if (u.type === 'upgradeLevel') {
       return getUpgradeLevel(u.key) >= (u.level || 1);
     }
@@ -1166,7 +1106,7 @@
     return '未解锁';
   }
 
-  /* ================= 背景粒子 ================= */
+  /* ================= 背景 ================= */
   function buildParticles() {
     const count = window.innerWidth < 600 ? 8 : 14;
     let html = '';
@@ -1175,16 +1115,13 @@
       const left = Math.random() * 100;
       const dur = 14 + Math.random() * 12;
       const delay = -Math.random() * dur;
-      html += '<i style="'
-        + 'width:' + size + 'px;height:' + size + 'px;'
-        + 'left:' + left + '%;'
-        + 'animation-duration:' + dur + 's;'
+      html += '<i style="width:' + size + 'px;height:' + size + 'px;'
+        + 'left:' + left + '%;animation-duration:' + dur + 's;'
         + 'animation-delay:' + delay + 's;"></i>';
     }
     bgParticles.innerHTML = html;
   }
 
-  /* ================= 动效 ================= */
   function floatPoint(n) {
     const rect = clickBtn.getBoundingClientRect();
     const el = document.createElement('div');
@@ -1329,11 +1266,7 @@
         { label: 'OP操作', retries: 1 }
       );
 
-      if (error) {
-        console.warn('[OP] 操作失败', error);
-        toast('失败：' + translateError(error, '未知错误'));
-        return false;
-      }
+      if (error) { toast('失败：' + translateError(error, '未知错误')); return false; }
 
       const res = data || {};
       if (!res.ok) {
@@ -1356,7 +1289,6 @@
       }
       return true;
     } catch (err) {
-      console.warn('[OP] 失败', err);
       toast(translateError(err, '操作失败，请稍后重试'));
       return false;
     }
@@ -1364,7 +1296,6 @@
 
   function bindOpEvents() {
     opBtn.addEventListener('click', openOpModal);
-
     opModal.addEventListener('click', function (e) {
       if (e.target.closest('[data-close-op]')) closeOpModal();
     });
@@ -1419,7 +1350,7 @@
     });
 
     $('opReset').addEventListener('click', async () => {
-      if (!confirm('确定重置所有数据吗？（点数、点击、在线时长、升级全部归零）')) return;
+      if (!confirm('确定重置所有数据吗？')) return;
       const newUpg = {};
       for (const def of upgradeDefs) newUpg[def.key] = 0;
       toast('重置中…');
@@ -1490,7 +1421,7 @@
       console.warn('同步失败', err);
       pendingClicks += toSyncClicks;
       pendingSeconds += toSyncSeconds;
-      setSyncChip(err.isNetworkFail ? '网络异常，稍后重试' : '同步失败，稍后重试', false);
+      setSyncChip(err.isNetworkFail ? '网络异常' : '同步失败', false);
     } finally {
       syncing = false;
     }
@@ -1501,8 +1432,9 @@
     if (!currentUser || !currentProfile) return;
 
     const prev = currentProfile.total_clicks || 0;
-    // 手动：+1
-    // 自动：底数 × 倍率
+
+    // 手动点击 +1
+    // 自动点击 = 底数 × 倍率
     const addClicks = auto ? engineGetAutoClickPerTick() : 1;
     const next = prev + addClicks;
 
@@ -1692,7 +1624,6 @@
       const canBuy = unlocked && !isMax && pts >= cost;
       const poor = unlocked && !isMax && pts < cost;
 
-      // 效果文本：未解锁时显示解锁提示
       let eff;
       if (!unlocked) {
         eff = '🔒 ' + getUnlockHint(def);
@@ -1755,10 +1686,7 @@
     const def = findDef(key);
     if (!def) { alert('该升级项不存在'); return; }
 
-    if (!isUnlocked(def)) {
-      alert(getUnlockHint(def));
-      return;
-    }
+    if (!isUnlocked(def)) { alert(getUnlockHint(def)); return; }
 
     const level = getUpgradeLevel(key);
     if (level >= def.maxLevel) { alert('已经满级啦'); return; }
@@ -1786,7 +1714,7 @@
         const msgs = {
           insufficient: '点数不足',
           max_level: '已经满级啦',
-          not_authenticated: '登录状态已失效，请重新登录',
+          not_authenticated: '登录状态已失效',
           profile_not_found: '数据异常，请重新登录',
           invalid_key: '升级项不存在',
           invalid_param: '参数错误'
@@ -1965,7 +1893,7 @@
       showAuthError(translateAuthError(err));
 
       if (err.isNetworkFail) {
-        showNet('fail', '网络中断，导致提交失败。<br>请检查网络后重试，或切换 WiFi / 手机流量。');
+        showNet('fail', '网络中断，导致提交失败。<br>请检查网络后重试。');
       } else {
         const stillOk = await checkConnection(true);
         if (!stillOk) {
